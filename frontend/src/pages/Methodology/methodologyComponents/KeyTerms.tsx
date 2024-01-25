@@ -10,6 +10,8 @@ import React, { useState } from 'react'
 import { useIsBreakpointAndUp } from '../../../utils/hooks/useIsBreakpointAndUp'
 import HetTerm from '../../../styles/HetComponents/HetTerm'
 
+// TODO: this component should be removed in favor of KeyTermsAccordion eventually
+
 interface KeyTermsProps {
   definitionsArray: Array<{
     topic: string
@@ -50,7 +52,7 @@ export default function KeyTerms(props: KeyTermsProps) {
                   <HetTerm>{item.topic}</HetTerm>
                   {item.definitions.map((def) => {
                     return (
-                      <article
+                      <figure
                         key={def.key}
                         className='mx-1 mb-2 mt-1 flex flex-col  p-0'
                       >
@@ -58,7 +60,7 @@ export default function KeyTerms(props: KeyTermsProps) {
                         <p className='m-0 self-start pt-1 text-small text-altBlack'>
                           {parseDescription(def.description)}
                         </p>
-                      </article>
+                      </figure>
                     )
                   })}
                 </div>
