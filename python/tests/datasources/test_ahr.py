@@ -88,9 +88,7 @@ def testWriteToBqRaceState(
     assert_frame_equal(mock_bq.call_args_list[0].args[0], expected_df, check_like=True)
 
 
-@mock.patch(
-    'ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery
-)
+@mock.patch('ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery)
 @mock.patch(
     'ingestion.gcs_to_bq_util.load_public_dataset_from_bigquery_as_df',
     side_effect=_load_public_dataset_from_bigquery_as_df,
@@ -128,9 +126,7 @@ def testWriteToBqAgeState(
     assert_frame_equal(mock_bq.call_args_list[1].args[0], expected_df, check_like=True)
 
 
-@mock.patch(
-    'ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery
-)
+@mock.patch('ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery)
 @mock.patch(
     'ingestion.gcs_to_bq_util.load_public_dataset_from_bigquery_as_df',
     side_effect=_load_public_dataset_from_bigquery_as_df,
@@ -172,9 +168,7 @@ def testWriteToBqSexState(
 # correct call to bigquery to get population data, so that is all we need to
 # test. There is no need to maintain GOLDEN files for this, as there is no
 # special parsing logic for national data.
-@mock.patch(
-    'ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery
-)
+@mock.patch('ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery)
 @mock.patch(
     'ingestion.gcs_to_bq_util.load_public_dataset_from_bigquery_as_df',
     side_effect=_load_public_dataset_from_bigquery_as_df,
@@ -206,9 +200,7 @@ def testWriteToBqRaceNational(
     assert mock_pop.call_args_list[6].args[1] == 'by_race_national'
 
 
-@mock.patch(
-    'ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery
-)
+@mock.patch('ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery)
 @mock.patch(
     'ingestion.gcs_to_bq_util.load_public_dataset_from_bigquery_as_df',
     side_effect=_load_public_dataset_from_bigquery_as_df,
@@ -240,9 +232,7 @@ def testWriteToBqAgeNational(
     assert mock_pop.call_args_list[7].args[1] == 'by_age_national'
 
 
-@mock.patch(
-    'ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery
-)
+@mock.patch('ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery)
 @mock.patch(
     'ingestion.gcs_to_bq_util.load_public_dataset_from_bigquery_as_df',
     side_effect=_load_public_dataset_from_bigquery_as_df,

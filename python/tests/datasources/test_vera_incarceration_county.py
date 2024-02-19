@@ -14,15 +14,9 @@ TEST_DIR = os.path.join(THIS_DIR, os.pardir, "data", "vera_incarceration_county"
 
 
 GOLDEN_DATA = {
-    'race_and_ethnicity_county': os.path.join(
-        TEST_DIR, "golden_data", 'by_race_and_ethnicity_county_time_series.csv'
-    ),
-    'age_county': os.path.join(
-        TEST_DIR, "golden_data", 'by_age_county_time_series.csv'
-    ),
-    'sex_county': os.path.join(
-        TEST_DIR, "golden_data", 'by_sex_county_time_series.csv'
-    ),
+    'race_and_ethnicity_county': os.path.join(TEST_DIR, "golden_data", 'by_race_and_ethnicity_county_time_series.csv'),
+    'age_county': os.path.join(TEST_DIR, "golden_data", 'by_age_county_time_series.csv'),
+    'sex_county': os.path.join(TEST_DIR, "golden_data", 'by_sex_county_time_series.csv'),
 }
 
 
@@ -69,9 +63,7 @@ veraIncarcerationCounty = VeraIncarcerationCounty()
     return_value=get_mocked_data_as_df(),
 )
 @mock.patch('ingestion.gcs_to_bq_util.add_df_to_bq', return_value=None)
-def testWriteToBqSex(
-    mock_bq: mock.MagicMock, mock_csv: mock.MagicMock, mock_counties: mock.MagicMock
-):
+def testWriteToBqSex(mock_bq: mock.MagicMock, mock_csv: mock.MagicMock, mock_counties: mock.MagicMock):
     kwargs["demographic"] = "sex"
     veraIncarcerationCounty.write_to_bq('dataset', 'gcs_bucket', **kwargs)
 
@@ -97,9 +89,7 @@ def testWriteToBqSex(
     return_value=get_mocked_data_as_df(),
 )
 @mock.patch('ingestion.gcs_to_bq_util.add_df_to_bq', return_value=None)
-def testWriteToBqAge(
-    mock_bq: mock.MagicMock, mock_csv: mock.MagicMock, mock_counties: mock.MagicMock
-):
+def testWriteToBqAge(mock_bq: mock.MagicMock, mock_csv: mock.MagicMock, mock_counties: mock.MagicMock):
     kwargs["demographic"] = "age"
     veraIncarcerationCounty.write_to_bq('dataset', 'gcs_bucket', **kwargs)
 
@@ -124,9 +114,7 @@ def testWriteToBqAge(
     return_value=get_mocked_data_as_df(),
 )
 @mock.patch('ingestion.gcs_to_bq_util.add_df_to_bq', return_value=None)
-def testWriteToBqRace(
-    mock_bq: mock.MagicMock, mock_csv: mock.MagicMock, mock_counties: mock.MagicMock
-):
+def testWriteToBqRace(mock_bq: mock.MagicMock, mock_csv: mock.MagicMock, mock_counties: mock.MagicMock):
     kwargs["demographic"] = "race_and_ethnicity"
     veraIncarcerationCounty.write_to_bq('dataset', 'gcs_bucket', **kwargs)
 

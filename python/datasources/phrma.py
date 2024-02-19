@@ -178,25 +178,13 @@ class PhrmaData(DataSource):
         return: a breakdown df by demographic and geo_level"""
 
         # give the ALL df a demographic column with correctly capitalized "All"/"ALL" value
-        demo_col = (
-            std_col.RACE_CATEGORY_ID_COL
-            if demo_breakdown == std_col.RACE_OR_HISPANIC_COL
-            else demo_breakdown
-        )
-        all_val = (
-            std_col.Race.ALL.value
-            if demo_breakdown == std_col.RACE_OR_HISPANIC_COL
-            else ALL_VALUE
-        )
+        demo_col = std_col.RACE_CATEGORY_ID_COL if demo_breakdown == std_col.RACE_OR_HISPANIC_COL else demo_breakdown
+        all_val = std_col.Race.ALL.value if demo_breakdown == std_col.RACE_OR_HISPANIC_COL else ALL_VALUE
 
         alls_df = alls_df.copy()
         alls_df[demo_col] = all_val
 
-        fips_to_use = (
-            std_col.COUNTY_FIPS_COL
-            if geo_level == COUNTY_LEVEL
-            else std_col.STATE_FIPS_COL
-        )
+        fips_to_use = std_col.COUNTY_FIPS_COL if geo_level == COUNTY_LEVEL else std_col.STATE_FIPS_COL
 
         breakdown_group_df = load_phrma_df_from_data_dir(geo_level, demo_breakdown)
 
@@ -235,9 +223,7 @@ class PhrmaData(DataSource):
                 for condition in PHRMA_100K_CONDITIONS
             },
             # Shared comparison population share col for all 100ks
-            MEDICARE_POP_COUNT: (
-                f'{std_col.MEDICARE_PREFIX}_{std_col.POPULATION_COL}_{std_col.PCT_SHARE_SUFFIX}'
-            ),
+            MEDICARE_POP_COUNT: (f'{std_col.MEDICARE_PREFIX}_{std_col.POPULATION_COL}_{std_col.PCT_SHARE_SUFFIX}'),
         }
 
         if demo_breakdown == std_col.RACE_OR_HISPANIC_COL:
@@ -252,29 +238,18 @@ class PhrmaData(DataSource):
                 df, count_to_share_map, cast(PHRMA_BREAKDOWN_TYPE, demo_col), all_val
             )
 
-        rename_col_map = {
-            MEDICARE_POP_COUNT: f'{std_col.MEDICARE_PREFIX}_{std_col.POPULATION_COL}'
-        }
+        rename_col_map = {MEDICARE_POP_COUNT: f'{std_col.MEDICARE_PREFIX}_{std_col.POPULATION_COL}'}
         for condition in PHRMA_PCT_CONDITIONS:
-            rename_col_map[
-                f'{condition}_{COUNT_YES}'
-            ] = f'{condition}_{ADHERENCE}_{std_col.RAW_SUFFIX}'
-            rename_col_map[
-                f'{condition}_{COUNT_TOTAL}'
-            ] = f'{condition}_{BENEFICIARIES}_{std_col.RAW_SUFFIX}'
+            rename_col_map[f'{condition}_{COUNT_YES}'] = f'{condition}_{ADHERENCE}_{std_col.RAW_SUFFIX}'
+            rename_col_map[f'{condition}_{COUNT_TOTAL}'] = f'{condition}_{BENEFICIARIES}_{std_col.RAW_SUFFIX}'
         for condition in PHRMA_100K_CONDITIONS:
-            rename_col_map[
-                f'{condition}_{MEDICARE_DISEASE_COUNT}'
-            ] = f'{condition}_{std_col.RAW_SUFFIX}'
+            rename_col_map[f'{condition}_{MEDICARE_DISEASE_COUNT}'] = f'{condition}_{std_col.RAW_SUFFIX}'
 
         df = df.rename(columns=rename_col_map)
 
         df = df.drop(
             columns=[
-                *[
-                    f'{condition}_{ADHERENCE_RATE}'
-                    for condition in PHRMA_PCT_CONDITIONS
-                ],
+                *[f'{condition}_{ADHERENCE_RATE}' for condition in PHRMA_PCT_CONDITIONS],
                 *[f'{condition}_{PER_100K}' for condition in PHRMA_100K_CONDITIONS],
             ]
         )
@@ -287,9 +262,7 @@ class PhrmaData(DataSource):
         return df
 
 
-def load_phrma_df_from_data_dir(
-    geo_level: GEO_TYPE, breakdown: PHRMA_BREAKDOWN_TYPE_OR_ALL
-) -> pd.DataFrame:
+def load_phrma_df_from_data_dir(geo_level: GEO_TYPE, breakdown: PHRMA_BREAKDOWN_TYPE_OR_ALL) -> pd.DataFrame:
     """Generates Phrma data by breakdown and geo_level
     geo_level: string equal to `county`, `national`, or `state`
     breakdown: string equal to `age`, `race_and_ethnicity`, `sex`, `lis`, `eligibility`, or `all`
@@ -306,15 +279,9 @@ def load_phrma_df_from_data_dir(
         merge_cols.append(std_col.STATE_FIPS_COL)
 
     if breakdown != TMP_ALL:
-        breakdown_col = (
-            std_col.RACE_CATEGORY_ID_COL
-            if breakdown == std_col.RACE_OR_HISPANIC_COL
-            else breakdown
-        )
+        breakdown_col = std_col.RACE_CATEGORY_ID_COL if breakdown == std_col.RACE_OR_HISPANIC_COL else breakdown
         merge_cols.append(breakdown_col)
-    fips_col = (
-        std_col.COUNTY_FIPS_COL if geo_level == COUNTY_LEVEL else std_col.STATE_FIPS_COL
-    )
+    fips_col = std_col.COUNTY_FIPS_COL if geo_level == COUNTY_LEVEL else std_col.STATE_FIPS_COL
 
     breakdown_het_to_source_type = {
         "age": AGE_GROUP,
@@ -374,9 +341,7 @@ def load_phrma_df_from_data_dir(
 
         topic_dfs.append(topic_df)
 
-    df_merged = reduce(
-        lambda df_a, df_b: pd.merge(df_a, df_b, on=merge_cols, how='outer'), topic_dfs
-    )
+    df_merged = reduce(lambda df_a, df_b: pd.merge(df_a, df_b, on=merge_cols, how='outer'), topic_dfs)
 
     # drop rows that dont include FIPS and DEMO values
     df_merged = df_merged[df_merged[fips_col].notna()]

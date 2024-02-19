@@ -24,9 +24,7 @@ def get_total_vaccinations_as_df():
     'ingestion.gcs_to_bq_util.load_csv_as_df_from_web',
     return_value=get_total_vaccinations_as_df(),
 )
-@mock.patch(
-    'ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery
-)
+@mock.patch('ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery)
 @mock.patch(
     'ingestion.gcs_to_bq_util.load_public_dataset_from_bigquery_as_df',
     side_effect=_load_public_dataset_from_bigquery_as_df,

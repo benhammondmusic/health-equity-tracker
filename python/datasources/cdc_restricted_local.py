@@ -31,9 +31,7 @@ CHUNK_SIZE = 5_000_000
 # Command line flags for the dir and file name prefix for the data.
 parser = argparse.ArgumentParser()
 parser.add_argument("-dir", "--dir", help="Path to the CDC restricted data CSV files")
-parser.add_argument(
-    "-prefix", "--prefix", help="Prefix for the CDC restricted CSV files"
-)
+parser.add_argument("-prefix", "--prefix", help="Prefix for the CDC restricted CSV files")
 
 # These are the columns that we want to keep from the data.
 # Geo columns (state, county) - we aggregate or groupby either state or county.
@@ -150,25 +148,13 @@ def accumulate_data(df, geo_cols, overall_df, demog_cols, names_mapping):
     # covered all the data and drop the original hospitalization/death columns.
     df[std_col.COVID_HOSP_Y] = df['hosp_yn'] == 'Yes'
     df[std_col.COVID_HOSP_N] = df['hosp_yn'] == 'No'
-    df[std_col.COVID_HOSP_UNKNOWN] = (df['hosp_yn'] == 'Unknown') | (
-        df['hosp_yn'] == 'Missing'
-    )
+    df[std_col.COVID_HOSP_UNKNOWN] = (df['hosp_yn'] == 'Unknown') | (df['hosp_yn'] == 'Missing')
     df[std_col.COVID_DEATH_Y] = df['death_yn'] == 'Yes'
     df[std_col.COVID_DEATH_N] = df['death_yn'] == 'No'
-    df[std_col.COVID_DEATH_UNKNOWN] = (df['death_yn'] == 'Unknown') | (
-        df['death_yn'] == 'Missing'
-    )
+    df[std_col.COVID_DEATH_UNKNOWN] = (df['death_yn'] == 'Unknown') | (df['death_yn'] == 'Missing')
 
-    check_hosp = (
-        df[std_col.COVID_HOSP_Y]
-        | df[std_col.COVID_HOSP_N]
-        | df[std_col.COVID_HOSP_UNKNOWN]
-    ).all()
-    check_deaths = (
-        df[std_col.COVID_DEATH_Y]
-        | df[std_col.COVID_DEATH_N]
-        | df[std_col.COVID_DEATH_UNKNOWN]
-    ).all()
+    check_hosp = (df[std_col.COVID_HOSP_Y] | df[std_col.COVID_HOSP_N] | df[std_col.COVID_HOSP_UNKNOWN]).all()
+    check_deaths = (df[std_col.COVID_DEATH_Y] | df[std_col.COVID_DEATH_N] | df[std_col.COVID_DEATH_UNKNOWN]).all()
 
     assert check_hosp, "All possible hosp_yn values are not accounted for"
     assert check_deaths, "All possible death_yn values are not accounted for"
@@ -214,16 +200,8 @@ def accumulate_data(df, geo_cols, overall_df, demog_cols, names_mapping):
 def sanity_check_data(df):
     # Perform some simple sanity checks that we are covering all the data.
     cases = df[std_col.COVID_CASES]
-    assert cases.equals(
-        df[std_col.COVID_HOSP_Y]
-        + df[std_col.COVID_HOSP_N]
-        + df[std_col.COVID_HOSP_UNKNOWN]
-    )
-    assert cases.equals(
-        df[std_col.COVID_DEATH_Y]
-        + df[std_col.COVID_DEATH_N]
-        + df[std_col.COVID_DEATH_UNKNOWN]
-    )
+    assert cases.equals(df[std_col.COVID_HOSP_Y] + df[std_col.COVID_HOSP_N] + df[std_col.COVID_HOSP_UNKNOWN])
+    assert cases.equals(df[std_col.COVID_DEATH_Y] + df[std_col.COVID_DEATH_N] + df[std_col.COVID_DEATH_UNKNOWN])
 
 
 def generate_national_dataset(state_df, groupby_cols):
@@ -295,7 +273,6 @@ def process_data(dir, files):
         )
 
         for chunk in chunked_frame:
-
             # We first do a bit of cleaning up of geo values and str values.
             df = chunk.replace({COUNTY_FIPS_COL: COUNTY_FIPS_NAMES_MAPPING})
             df = df.replace({COUNTY_COL: COUNTY_NAMES_MAPPING})
@@ -303,9 +280,7 @@ def process_data(dir, files):
 
             # For county fips, we make sure they are strings of length 5 as per
             # our standardization (ignoring empty values).
-            df[COUNTY_FIPS_COL] = df[COUNTY_FIPS_COL].map(
-                lambda x: x.zfill(5) if len(x) > 0 else x
-            )
+            df[COUNTY_FIPS_COL] = df[COUNTY_FIPS_COL].map(lambda x: x.zfill(5) if len(x) > 0 else x)
 
             # For each of ({state, county} x {race, sex, age}), we slice the
             # data to focus on that dimension and aggregate.
@@ -367,11 +342,7 @@ def main():
     files = [f for f in os.listdir(dir) if os.path.isfile(os.path.join(dir, f))]
     for f in files:
         filename_parts = f.split('.')
-        if (
-            len(filename_parts) == 2
-            and prefix in filename_parts[0]
-            and filename_parts[1] == 'csv'
-        ):
+        if len(filename_parts) == 2 and prefix in filename_parts[0] and filename_parts[1] == 'csv':
             matching_files.append(f)
 
     if len(matching_files) == 0:

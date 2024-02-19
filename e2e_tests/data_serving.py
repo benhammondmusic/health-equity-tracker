@@ -21,7 +21,8 @@ def testDataServerDataServing():
 
     # Get service account credentials to make request to private URL
     creds = service_account.IDTokenCredentials.from_service_account_file(
-        os.environ.get('PATH_TO_SA_CREDS'), target_audience=service_url)
+        os.environ.get('PATH_TO_SA_CREDS'), target_audience=service_url
+    )
 
     authed_session = AuthorizedSession(creds)
 
@@ -32,8 +33,7 @@ def testDataServerDataServing():
 
 def testDataServingThroughFrontend():
     # Get the url of the frontend.
-    frontend_url = os.environ.get('FRONTEND_URL').strip(
-        '"') + '/api/dataset?name=acs_population-by_sex_state.json'
+    frontend_url = os.environ.get('FRONTEND_URL').strip('"') + '/api/dataset?name=acs_population-by_sex_state.json'
     print('FRONTEND_URL={}'.format(frontend_url))
 
     frame = pandas.read_json(frontend_url, orient='values')

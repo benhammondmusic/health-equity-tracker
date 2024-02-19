@@ -12,11 +12,7 @@ GOLDEN_DIR = os.path.join(TEST_DIR, 'golden_data')
 
 # RUN THIS TO LOAD FAKE TEST DATA INSTEAD OF THE REAL /data
 def get_test_data_as_df():
-    df = pd.read_csv(
-        os.path.join(
-            TEST_DIR, 'IHME_USA_MMR_STATE_RACE_ETHN_1999_2019_ESTIMATES_Y2023M07D03.CSV'
-        )
-    )
+    df = pd.read_csv(os.path.join(TEST_DIR, 'IHME_USA_MMR_STATE_RACE_ETHN_1999_2019_ESTIMATES_Y2023M07D03.CSV'))
     return df
 
 

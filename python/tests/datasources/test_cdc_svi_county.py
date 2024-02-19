@@ -23,9 +23,7 @@ GOLDEN_DATA = os.path.join(TEST_DIR, 'test_output_cdc_svi_county_by_age.csv')
 
 
 def get_svi_as_df():
-    return pd.read_csv(
-        os.path.join(TEST_DIR, 'cdc_svi_county_test.csv'), dtype={"FIPS": str}
-    )
+    return pd.read_csv(os.path.join(TEST_DIR, 'cdc_svi_county_test.csv'), dtype={"FIPS": str})
 
 
 @mock.patch(
@@ -37,9 +35,7 @@ def get_svi_as_df():
     side_effect=_load_public_dataset_from_bigquery_as_df,
 )
 @mock.patch('ingestion.gcs_to_bq_util.add_df_to_bq', return_value=None)
-def testWriteToBq(
-    mock_bq: mock.MagicMock, mock_county_names: mock.MagicMock, mock_csv: mock.MagicMock
-):
+def testWriteToBq(mock_bq: mock.MagicMock, mock_county_names: mock.MagicMock, mock_csv: mock.MagicMock):
     cdcSviCounty = CDCSviCounty()
 
     kwargs = {

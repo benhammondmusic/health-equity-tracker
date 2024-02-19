@@ -27,9 +27,7 @@ class MaternalMortalityData(DataSource):
         return 'maternal_mortality_data'
 
     def upload_to_gcs(self, _, **attrs):
-        raise NotImplementedError(
-            'upload_to_gcs should not be called for MaternalMortalityData'
-        )
+        raise NotImplementedError('upload_to_gcs should not be called for MaternalMortalityData')
 
     def write_to_bq(self, dataset, gcs_bucket, **attrs):
         # Read in the data
