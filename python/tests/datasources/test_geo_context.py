@@ -45,9 +45,7 @@ def _scaffold_fips_df(*args):
 
 
 def _get_svi_as_df():
-    return pd.read_csv(
-        os.path.join(TEST_DIR, 'cdc_svi_county_test.csv'), dtype={"FIPS": str}
-    )
+    return pd.read_csv(os.path.join(TEST_DIR, 'cdc_svi_county_test.csv'), dtype={"FIPS": str})
 
 
 def _generate_breakdown(*args):
@@ -99,9 +97,7 @@ def testWriteToBq(mock_bq: mock.MagicMock, mock_generate_breakdown: mock.MagicMo
     'ingestion.gcs_to_bq_util.load_public_dataset_from_bigquery_as_df',
     side_effect=_load_public_dataset_from_bigquery_as_df,
 )
-@mock.patch(
-    'ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery
-)
+@mock.patch('ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery)
 def testGenerateNationalBreakdown(
     mock_pop: mock.MagicMock,
     mock_state_names: mock.MagicMock,
@@ -127,9 +123,7 @@ def testGenerateNationalBreakdown(
     'ingestion.gcs_to_bq_util.load_public_dataset_from_bigquery_as_df',
     side_effect=_load_public_dataset_from_bigquery_as_df,
 )
-@mock.patch(
-    'ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery
-)
+@mock.patch('ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery)
 def testGenerateStateLevelBreakdown(
     mock_pop: mock.MagicMock,
     mock_state_names: mock.MagicMock,
@@ -160,9 +154,7 @@ def testGenerateStateLevelBreakdown(
     'ingestion.gcs_to_bq_util.load_public_dataset_from_bigquery_as_df',
     side_effect=_load_public_dataset_from_bigquery_as_df,
 )
-@mock.patch(
-    'ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery
-)
+@mock.patch('ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery)
 @mock.patch(
     'ingestion.gcs_to_bq_util.load_csv_as_df_from_data_dir',
     return_value=_get_svi_as_df(),

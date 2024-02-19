@@ -25,9 +25,7 @@ TEST_DATA = [
 GOLDEN_DATA = {
     ("state", "race"): os.path.join(TEST_DIR, "cdc_restricted_by_race_state.csv"),
     ("county", "race"): os.path.join(TEST_DIR, "cdc_restricted_by_race_county.csv"),
-    ("state", "race_and_age"): os.path.join(
-        TEST_DIR, "cdc_restricted_by_race_and_age_state.csv"
-    ),
+    ("state", "race_and_age"): os.path.join(TEST_DIR, "cdc_restricted_by_race_and_age_state.csv"),
     ("state", "age"): os.path.join(TEST_DIR, "cdc_restricted_by_age_state.csv"),
     ("county", "age"): os.path.join(TEST_DIR, "cdc_restricted_by_age_county.csv"),
     ("state", "sex"): os.path.join(TEST_DIR, "cdc_restricted_by_sex_state.csv"),
@@ -35,9 +33,7 @@ GOLDEN_DATA = {
 }
 
 
-GOLDEN_DATA_NATIONAL = os.path.join(
-    TEST_DIR, "cdc_restricted_by_race_and_age_national.csv"
-)
+GOLDEN_DATA_NATIONAL = os.path.join(TEST_DIR, "cdc_restricted_by_race_and_age_national.csv")
 
 
 def testKeyMap():

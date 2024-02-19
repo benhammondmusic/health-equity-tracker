@@ -216,7 +216,6 @@ def testWriteToBqCountyCallsAppend2022(mock_bq: mock.MagicMock, mock_cache: mock
 @mock.patch('ingestion.gcs_to_bq_util.load_values_as_df', side_effect=_load_values_as_df)
 @mock.patch('ingestion.gcs_to_bq_util.add_df_to_bq', return_value=None)
 def testWriteToBqRaceAppend2022(mock_bq: mock.MagicMock, mock_cache: mock.MagicMock, mock_json: mock.MagicMock):
-
     acsPopulationIngester = ACSPopulationIngester(False, "2022")
     acsPopulationIngester.write_to_bq('dataset', 'gcs_bucket')
 
@@ -238,7 +237,6 @@ def testWriteToBqRaceAppend2022(mock_bq: mock.MagicMock, mock_cache: mock.MagicM
 def testWriteToBqSexAgeRaceOverwrite2009(
     mock_bq: mock.MagicMock, mock_cache: mock.MagicMock, mock_json: mock.MagicMock
 ):
-
     acsPopulationIngester = ACSPopulationIngester(False, '2009')
     acsPopulationIngester.write_to_bq('dataset', 'gcs_bucket')
 
@@ -254,7 +252,6 @@ def testWriteToBqSexAgeRaceOverwrite2009(
 @mock.patch('ingestion.gcs_to_bq_util.load_values_as_df', side_effect=_load_values_as_df)
 @mock.patch('ingestion.gcs_to_bq_util.add_df_to_bq', return_value=None)
 def testWriteToBqSexAgeAppend2022(mock_bq: mock.MagicMock, mock_cache: mock.MagicMock, mock_json: mock.MagicMock):
-
     acsPopulationIngester = ACSPopulationIngester(False, "2022")
 
     acsPopulationIngester.write_to_bq('dataset', 'gcs_bucket')
@@ -276,7 +273,6 @@ def testWriteToBqSexAgeAppend2022(mock_bq: mock.MagicMock, mock_cache: mock.Magi
 @mock.patch('ingestion.gcs_to_bq_util.load_values_as_df', side_effect=_load_values_as_df)
 @mock.patch('ingestion.gcs_to_bq_util.add_df_to_bq', return_value=None)
 def testWriteToBqSex2022(mock_bq: mock.MagicMock, mock_cache: mock.MagicMock, mock_json: mock.MagicMock):
-
     acsPopulationIngester = ACSPopulationIngester(False, "2022")
 
     acsPopulationIngester.write_to_bq('dataset', 'gcs_bucket')
@@ -298,7 +294,6 @@ def testWriteToBqSex2022(mock_bq: mock.MagicMock, mock_cache: mock.MagicMock, mo
 @mock.patch('ingestion.gcs_to_bq_util.load_values_as_df', side_effect=_load_values_as_df)
 @mock.patch('ingestion.gcs_to_bq_util.add_df_to_bq', return_value=None)
 def testWriteToBqRaceNational2022(mock_bq: mock.MagicMock, mock_cache: mock.MagicMock, mock_json: mock.MagicMock):
-
     acsPopulationIngester = ACSPopulationIngester(False, "2022")
     acsPopulationIngester.write_to_bq('dataset', 'gcs_bucket')
 
@@ -319,7 +314,6 @@ def testWriteToBqRaceNational2022(mock_bq: mock.MagicMock, mock_cache: mock.Magi
 @mock.patch('ingestion.gcs_to_bq_util.load_values_as_df', side_effect=_load_values_as_df)
 @mock.patch('ingestion.gcs_to_bq_util.add_df_to_bq', return_value=None)
 def testWriteToBqSexNational2022(mock_bq: mock.MagicMock, mock_cache: mock.MagicMock, mock_json: mock.MagicMock):
-
     acsPopulationIngester = ACSPopulationIngester(False, "2022")
     acsPopulationIngester.write_to_bq('dataset', 'gcs_bucket')
 
@@ -341,7 +335,6 @@ def testWriteToBqSexNational2022(mock_bq: mock.MagicMock, mock_cache: mock.Magic
 @mock.patch('ingestion.gcs_to_bq_util.load_values_as_df', side_effect=_load_values_as_df)
 @mock.patch('ingestion.gcs_to_bq_util.add_df_to_bq', return_value=None)
 def testWriteToBqAgeCounty2022(mock_bq: mock.MagicMock, mock_cache: mock.MagicMock, mock_json: mock.MagicMock):
-
     acsPopulationIngester = ACSPopulationIngester(True, "2022")
 
     acsPopulationIngester.write_to_bq('dataset', 'gcs_bucket')

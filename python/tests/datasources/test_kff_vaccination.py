@@ -19,15 +19,11 @@ def get_github_file_list_as_df():
 
 
 def get_percentage_of_race_test_data_as_df():
-    return pd.read_csv(
-        os.path.join(TEST_DIR, 'kff_vaccination_percentage_of_race_test.csv')
-    )
+    return pd.read_csv(os.path.join(TEST_DIR, 'kff_vaccination_percentage_of_race_test.csv'))
 
 
 def get_pct_share_race_test_data_as_df():
-    return pd.read_csv(
-        os.path.join(TEST_DIR, 'kff_vaccination_pct_share_race_test.csv')
-    )
+    return pd.read_csv(os.path.join(TEST_DIR, 'kff_vaccination_pct_share_race_test.csv'))
 
 
 def get_state_totals_test_data_as_df():
@@ -38,9 +34,7 @@ def get_state_totals_test_data_as_df():
 
 
 def get_kff_population_numbers_as_df():
-    return pd.read_csv(
-        os.path.join(TEST_DIR, 'kff_vaccination_population.csv'), dtype=str
-    )
+    return pd.read_csv(os.path.join(TEST_DIR, 'kff_vaccination_population.csv'), dtype=str)
 
 
 @mock.patch(
@@ -72,9 +66,7 @@ def testGetDataUrlPctShare(mock_json: mock.MagicMock):
     'ingestion.gcs_to_bq_util.load_public_dataset_from_bigquery_as_df',
     side_effect=_load_public_dataset_from_bigquery_as_df,
 )
-@mock.patch(
-    'ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery
-)
+@mock.patch('ingestion.gcs_to_bq_util.load_df_from_bigquery', side_effect=_load_df_from_bigquery)
 @mock.patch('ingestion.gcs_to_bq_util.add_df_to_bq', return_value=None)
 def testWriteToBq(
     mock_bq: mock.MagicMock,

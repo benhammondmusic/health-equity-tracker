@@ -78,9 +78,7 @@ class CDCWisqarsYouthData(DataSource):
 
         national_totals_by_intent_df = load_wisqars_df_from_data_dir("all", geo_level)
 
-        df = self.generate_breakdown_df(
-            demographic, geo_level, national_totals_by_intent_df
-        )
+        df = self.generate_breakdown_df(demographic, geo_level, national_totals_by_intent_df)
 
         float_cols = [
             std_col.POPULATION_COL,
@@ -102,13 +100,9 @@ class CDCWisqarsYouthData(DataSource):
 
             col_types = gcs_to_bq_util.get_bq_column_types(df_for_bq, float_cols)
 
-            gcs_to_bq_util.add_df_to_bq(
-                df_for_bq, dataset, table_name, column_types=col_types
-            )
+            gcs_to_bq_util.add_df_to_bq(df_for_bq, dataset, table_name, column_types=col_types)
 
-    def generate_breakdown_df(
-        self, breakdown: str, geo_level: str, alls_df: pd.DataFrame
-    ):
+    def generate_breakdown_df(self, breakdown: str, geo_level: str, alls_df: pd.DataFrame):
         cols_to_standard = {
             "year": std_col.TIME_PERIOD_COL,
             "state": std_col.STATE_NAME_COL,

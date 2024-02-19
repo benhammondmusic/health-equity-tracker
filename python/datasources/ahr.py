@@ -24,30 +24,13 @@ AHR_RACE_GROUPS = [
 # COPD, Diabetes, Depression, Frequent Mental Distress, Excessive Drinking
 BROAD_AGE_GROUPS = ['18-44', '45-64', '65+']
 
-SUICIDE_AGE_GROUPS = [
-    '15-24',
-    '25-34',
-    '35-44',
-    '45-54',
-    '55-64',
-    '65-74',
-    '75-84',
-    '85+']
+SUICIDE_AGE_GROUPS = ['15-24', '25-34', '35-44', '45-54', '55-64', '65-74', '75-84', '85+']
 
 
-VOTER_AGE_GROUPS = [
-    '18-24 ',  # NOTE csv has typo extra space which we remove later
-    '25-34',
-    '35-44',
-    '45-64']
+VOTER_AGE_GROUPS = ['18-24 ', '25-34', '35-44', '45-64']  # NOTE csv has typo extra space which we remove later
 
 # single list of all unique age group options
-AHR_AGE_GROUPS = list(dict.fromkeys([
-    std_col.ALL_VALUE,
-    *SUICIDE_AGE_GROUPS,
-    *VOTER_AGE_GROUPS,
-    *BROAD_AGE_GROUPS
-]))
+AHR_AGE_GROUPS = list(dict.fromkeys([std_col.ALL_VALUE, *SUICIDE_AGE_GROUPS, *VOTER_AGE_GROUPS, *BROAD_AGE_GROUPS]))
 
 # # No Age Breakdowns for: Non-medical Drug (including Non-Medical Rx Opioid)
 
@@ -68,12 +51,12 @@ RACE_GROUPS_TO_STANDARD = {
 
 PER100K_DETERMINANTS = {
     "Suicide": std_col.SUICIDE_PREFIX,
-    "Preventable Hospitalizations": std_col.PREVENTABLE_HOSP_PREFIX
+    "Preventable Hospitalizations": std_col.PREVENTABLE_HOSP_PREFIX,
 }
 
 PCT_RATE_DETERMINANTS = {
     "Voter Participation": std_col.VOTER_PARTICIPATION_PREFIX,
-    "Avoided Care Due to Cost": std_col.AVOIDED_CARE_PREFIX
+    "Avoided Care Due to Cost": std_col.AVOIDED_CARE_PREFIX,
 }
 
 CONVERT_PCT_TO_100K_DETERMINANTS = {
@@ -85,25 +68,19 @@ CONVERT_PCT_TO_100K_DETERMINANTS = {
     "Non-medical Drug Use": std_col.NON_MEDICAL_DRUG_USE_PREFIX,
     "Asthma": std_col.ASTHMA_PREFIX,
     "Cardiovascular Diseases": std_col.CARDIOVASCULAR_PREFIX,
-    "Chronic Kidney Disease": std_col.CHRONIC_KIDNEY_PREFIX
+    "Chronic Kidney Disease": std_col.CHRONIC_KIDNEY_PREFIX,
 }
 
-AHR_DETERMINANTS = {
-    **PER100K_DETERMINANTS,
-    **PCT_RATE_DETERMINANTS,
-    **CONVERT_PCT_TO_100K_DETERMINANTS
-}
+AHR_DETERMINANTS = {**PER100K_DETERMINANTS, **PCT_RATE_DETERMINANTS, **CONVERT_PCT_TO_100K_DETERMINANTS}
 
 # When parsing Measure Names from rows with a demographic breakdown
 # these aliases will be used instead of the determinant string above
 ALT_ROWS_ALL = {
     "Non-medical Drug Use": "Non-medical Drug Use - Past Year",
-    "Voter Participation": "Voter Participation (Presidential)"
+    "Voter Participation": "Voter Participation (Presidential)",
 }
 
-ALT_ROWS_WITH_DEMO = {
-    "Voter Participation": "Voter Participation (Presidential)"
-}
+ALT_ROWS_WITH_DEMO = {"Voter Participation": "Voter Participation (Presidential)"}
 
 
 PLUS_5_AGE_DETERMINANTS = {
@@ -119,7 +96,6 @@ BREAKDOWN_MAP = {
 
 
 class AHRData(DataSource):
-
     @staticmethod
     def get_id():
         return 'AHR_DATA'
@@ -129,30 +105,23 @@ class AHRData(DataSource):
         return 'ahr_data'
 
     def upload_to_gcs(self, _, **attrs):
-        raise NotImplementedError(
-            'upload_to_gcs should not be called for AHRData')
+        raise NotImplementedError('upload_to_gcs should not be called for AHRData')
 
     def write_to_bq(self, dataset, gcs_bucket, **attrs):
-        df = gcs_to_bq_util.load_csv_as_df_from_data_dir('ahr',
-                                                         'ahr_annual_2022.csv',
-                                                         dtype={'StateCode': str,
-                                                                "Measure": str,
-                                                                "Value": float})
+        df = gcs_to_bq_util.load_csv_as_df_from_data_dir(
+            'ahr', 'ahr_annual_2022.csv', dtype={'StateCode': str, "Measure": str, "Value": float}
+        )
 
-        df.rename(
-            columns={'StateCode': std_col.STATE_POSTAL_COL}, inplace=True)
-        df[std_col.STATE_POSTAL_COL].replace(
-            'ALL', constants.US_ABBR, inplace=True)
+        df.rename(columns={'StateCode': std_col.STATE_POSTAL_COL}, inplace=True)
+        df[std_col.STATE_POSTAL_COL].replace('ALL', constants.US_ABBR, inplace=True)
 
         for geo in [constants.STATE_LEVEL, constants.NATIONAL_LEVEL]:
             loc_df = df.copy()
 
             if geo == constants.NATIONAL_LEVEL:
-                loc_df = loc_df.loc[loc_df[std_col.STATE_POSTAL_COL]
-                                    == constants.US_ABBR]
+                loc_df = loc_df.loc[loc_df[std_col.STATE_POSTAL_COL] == constants.US_ABBR]
             else:
-                loc_df = loc_df.loc[loc_df[std_col.STATE_POSTAL_COL]
-                                    != constants.US_ABBR]
+                loc_df = loc_df.loc[loc_df[std_col.STATE_POSTAL_COL] != constants.US_ABBR]
 
             for breakdown in [std_col.RACE_OR_HISPANIC_COL, std_col.AGE_COL, std_col.SEX_COL]:
                 table_name = f'{breakdown}_{geo}'
@@ -163,24 +132,29 @@ class AHRData(DataSource):
                 # get list of all columns expected to contain numbers
                 float_cols = [std_col.AHR_POPULATION_PCT]
                 float_cols.extend(
-                    [std_col.generate_column_name(col, std_col.PCT_RATE_SUFFIX)
-                     for col in PCT_RATE_DETERMINANTS.values()])
+                    [
+                        std_col.generate_column_name(col, std_col.PCT_RATE_SUFFIX)
+                        for col in PCT_RATE_DETERMINANTS.values()
+                    ]
+                )
                 float_cols.extend(
-                    [std_col.generate_column_name(col, std_col.PER_100K_SUFFIX)
-                     for col in PER100K_DETERMINANTS.values()])
+                    [
+                        std_col.generate_column_name(col, std_col.PER_100K_SUFFIX)
+                        for col in PER100K_DETERMINANTS.values()
+                    ]
+                )
                 float_cols.extend(
-                    [std_col.generate_column_name(col, std_col.PER_100K_SUFFIX)
-                     for col in CONVERT_PCT_TO_100K_DETERMINANTS.values()])
+                    [
+                        std_col.generate_column_name(col, std_col.PER_100K_SUFFIX)
+                        for col in CONVERT_PCT_TO_100K_DETERMINANTS.values()
+                    ]
+                )
                 float_cols.extend(
-                    [std_col.generate_column_name(col, std_col.PCT_SHARE_SUFFIX)
-                     for col in AHR_DETERMINANTS.values()])
-                col_types = gcs_to_bq_util.get_bq_column_types(
-                    breakdown_df, float_cols)
+                    [std_col.generate_column_name(col, std_col.PCT_SHARE_SUFFIX) for col in AHR_DETERMINANTS.values()]
+                )
+                col_types = gcs_to_bq_util.get_bq_column_types(breakdown_df, float_cols)
 
-                gcs_to_bq_util.add_df_to_bq(breakdown_df,
-                                            dataset,
-                                            table_name,
-                                            column_types=col_types)
+                gcs_to_bq_util.add_df_to_bq(breakdown_df, dataset, table_name, column_types=col_types)
 
 
 def parse_raw_data(df: pd.DataFrame, breakdown: SEX_RACE_ETH_AGE_TYPE):
@@ -209,22 +183,18 @@ def parse_raw_data(df: pd.DataFrame, breakdown: SEX_RACE_ETH_AGE_TYPE):
                 output_row[breakdown] = breakdown_value
 
             for determinant, prefix in AHR_DETERMINANTS.items():
-                per_100k_col_name = std_col.generate_column_name(prefix,
-                                                                 std_col.PER_100K_SUFFIX)
-                pct_rate_col_name = std_col.generate_column_name(prefix,
-                                                                 std_col.PCT_RATE_SUFFIX)
-                pct_share_col_name = std_col.generate_column_name(prefix,
-                                                                  std_col.PCT_SHARE_SUFFIX)
+                per_100k_col_name = std_col.generate_column_name(prefix, std_col.PER_100K_SUFFIX)
+                pct_rate_col_name = std_col.generate_column_name(prefix, std_col.PCT_RATE_SUFFIX)
+                pct_share_col_name = std_col.generate_column_name(prefix, std_col.PCT_SHARE_SUFFIX)
 
                 # replace extra space to match 65+ column correctly
-                df.replace('Voter Participation (Presidential) - Ages 65+ ',
-                           'Voter Participation (Presidential) - Ages 65+', inplace=True)
+                df.replace(
+                    'Voter Participation (Presidential) - Ages 65+ ',
+                    'Voter Participation (Presidential) - Ages 65+',
+                    inplace=True,
+                )
 
-                matched_row = get_matched_row(df,
-                                              state,
-                                              determinant,
-                                              breakdown_value,
-                                              breakdown)
+                matched_row = get_matched_row(df, state, determinant, breakdown_value, breakdown)
 
                 if len(matched_row) > 0:
                     output_row[pct_share_col_name] = matched_row['CaseShare'].values[0]
@@ -265,25 +235,19 @@ def post_process(breakdown_df: pd.DataFrame, breakdown: SEX_RACE_ETH_AGE_TYPE, g
 
     breakdown_name = 'race' if breakdown == std_col.RACE_OR_HISPANIC_COL else breakdown
 
-    breakdown_df = merge_pop_numbers(breakdown_df,
-                                     cast(SEX_RACE_AGE_TYPE, breakdown_name),
-                                     geo)
+    breakdown_df = merge_pop_numbers(breakdown_df, cast(SEX_RACE_AGE_TYPE, breakdown_name), geo)
 
-    breakdown_df = breakdown_df.rename(
-        columns={std_col.POPULATION_PCT_COL: std_col.AHR_POPULATION_PCT})
+    breakdown_df = breakdown_df.rename(columns={std_col.POPULATION_PCT_COL: std_col.AHR_POPULATION_PCT})
 
-    breakdown_df[std_col.AHR_POPULATION_PCT] = breakdown_df[std_col.AHR_POPULATION_PCT].astype(
-        float)
+    breakdown_df[std_col.AHR_POPULATION_PCT] = breakdown_df[std_col.AHR_POPULATION_PCT].astype(float)
     breakdown_df = breakdown_df.drop(columns=std_col.POPULATION_COL)
 
     return breakdown_df
 
 
-def get_matched_row(df: pd.DataFrame,
-                    state: str,
-                    determinant: str,
-                    breakdown_value: str,
-                    breakdown: SEX_RACE_ETH_AGE_TYPE):
+def get_matched_row(
+    df: pd.DataFrame, state: str, determinant: str, breakdown_value: str, breakdown: SEX_RACE_ETH_AGE_TYPE
+):
     """
     Find the row in the AHR dataframe that matches the given state, determinant,
     and breakdown values.
@@ -301,8 +265,7 @@ def get_matched_row(df: pd.DataFrame,
     if breakdown_value in {std_col.ALL_VALUE, 'Total'}:
         # find row that matches current nested iterations
         matched_row = df.loc[
-            (df[std_col.STATE_POSTAL_COL] == state) &
-            (df['Measure'] == ALT_ROWS_ALL.get(determinant, determinant))
+            (df[std_col.STATE_POSTAL_COL] == state) & (df['Measure'] == ALT_ROWS_ALL.get(determinant, determinant))
         ]
 
     else:
@@ -313,15 +276,8 @@ def get_matched_row(df: pd.DataFrame,
         space_or_ages = " "
         if breakdown == std_col.AGE_COL:
             space_or_ages += "Ages "
-        measure_name = (
-            f"{ALT_ROWS_WITH_DEMO.get(determinant, determinant)}"
-            f" -{space_or_ages}"
-            f"{breakdown_value}"
-        )
+        measure_name = f"{ALT_ROWS_WITH_DEMO.get(determinant, determinant)}" f" -{space_or_ages}" f"{breakdown_value}"
 
-        matched_row = df.loc[
-            (df[std_col.STATE_POSTAL_COL] == state) &
-            (df['Measure'] == measure_name)
-        ]
+        matched_row = df.loc[(df[std_col.STATE_POSTAL_COL] == state) & (df['Measure'] == measure_name)]
 
     return matched_row

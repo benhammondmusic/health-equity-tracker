@@ -147,15 +147,11 @@ cdc_hiv_exporter_operator_race = util.create_exporter_operator(
 )
 
 payload_age = {'dataset_name': _CDC_HIV_DATASET_NAME, 'demographic': "age"}
-cdc_hiv_exporter_operator_age = util.create_exporter_operator(
-    'cdc_hiv_exporter_age', payload_age, data_ingestion_dag
-)
+cdc_hiv_exporter_operator_age = util.create_exporter_operator('cdc_hiv_exporter_age', payload_age, data_ingestion_dag)
 
 
 payload_sex = {'dataset_name': _CDC_HIV_DATASET_NAME, 'demographic': "sex"}
-cdc_hiv_exporter_operator_sex = util.create_exporter_operator(
-    'cdc_hiv_exporter_sex', payload_sex, data_ingestion_dag
-)
+cdc_hiv_exporter_operator_sex = util.create_exporter_operator('cdc_hiv_exporter_sex', payload_sex, data_ingestion_dag)
 
 payload_black_women = {
     'dataset_name': _CDC_HIV_DATASET_NAME,

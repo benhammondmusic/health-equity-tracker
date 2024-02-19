@@ -140,7 +140,6 @@ class AcsItem:
         does_not_have_condition_key,
         bq_prefix,
     ):
-
         self.prefix_map = prefix_map
         self.concept_map = concept_map
         self.sex_age_prefix = sex_age_prefix
@@ -221,7 +220,6 @@ def update_col_types(df):
 
 
 class AcsCondition(DataSource):
-
     def get_filename_race(self, measure, race, is_county, year):
         geo = 'COUNTY' if is_county else 'STATE'
         race = race.replace(" ", "_").upper()
@@ -250,7 +248,6 @@ class AcsCondition(DataSource):
     # Returns:
     # FileDiff = If the data has changed by diffing the old run vs the new run.
     def upload_to_gcs(self, bucket, **attrs):
-
         year = self.get_attr(attrs, 'year')
         self.year = year
         self.base_url = ACS_URLS_MAP[year]
@@ -289,7 +286,6 @@ class AcsCondition(DataSource):
         return file_diff
 
     def write_to_bq(self, dataset, gcs_bucket, **attrs):
-
         year = self.get_attr(attrs, 'year')
         self.year = year
         self.base_url = ACS_URLS_MAP[year]
@@ -314,7 +310,6 @@ class AcsCondition(DataSource):
             std_col.PCT_REL_INEQUITY_SUFFIX,
         ]
         for table_name, df in dfs.items():
-
             # TIME SERIES  TABLE
             df[std_col.TIME_PERIOD_COL] = self.year
 

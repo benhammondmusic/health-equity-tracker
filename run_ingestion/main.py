@@ -6,16 +6,17 @@ import logging
 import os
 from datasources.data_sources import DATA_SOURCES_DICT
 from flask import Flask, request
+
 app = Flask(__name__)
 
 
 @app.route('/', methods=['POST'])
 def ingest_data():
     """Main function for data ingestion. Receives Pub/Sub trigger and triages
-       to the appropriate data ingestion workflow.
+    to the appropriate data ingestion workflow.
 
-       Returns 400 for a bad request and 204 for successful new file downloads
-       or 201 for successful non file download execution."""
+    Returns 400 for a bad request and 204 for successful new file downloads
+    or 201 for successful non file download execution."""
     envelope = request.get_json()
     if not envelope:
         logging.error('No Pub/Sub message received.')
@@ -68,8 +69,7 @@ def ingest_data_to_gcs(event):
     data_source = DATA_SOURCES_DICT[workflow_id]
     data_source.upload_to_gcs(gcs_bucket, **attrs)
 
-    logging.info(
-        "Successfully uploaded data to GCS for workflow %s", workflow_id)
+    logging.info("Successfully uploaded data to GCS for workflow %s", workflow_id)
 
 
 if __name__ == "__main__":
