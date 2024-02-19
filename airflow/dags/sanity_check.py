@@ -9,8 +9,7 @@ TIME_PERIOD_COL = 'time_period'
 
 
 def generate_cols(df: pd.DataFrame):
-    share_cols = df.columns.to_series(
-    ).loc[df.columns.str.contains('share')].tolist()
+    share_cols = df.columns.to_series().loc[df.columns.str.contains('share')].tolist()
 
     # determine demographic column
     if RACE_CATEGORY_ID_COL in df.columns:
@@ -49,8 +48,10 @@ def check_pct_values(df, table_name):
 
     # filter rows that are not within the 'expected' range
     threshold = 2
-    bad_fips_df = df.loc[((df[share_cols].values < 100 - threshold) |
-                         (df[share_cols].values > 100 + threshold)) & (df[share_cols].values != 0)].drop_duplicates()
+    bad_fips_df = df.loc[
+        ((df[share_cols].values < 100 - threshold) | (df[share_cols].values > 100 + threshold))
+        & (df[share_cols].values != 0)
+    ].drop_duplicates()
 
     # return error w/county info if DF exists
     if len(bad_fips_df) > 0:

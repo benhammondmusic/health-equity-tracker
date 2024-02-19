@@ -273,7 +273,6 @@ def _get_county_names_as_df(*args, **kwargs):
 
 
 def _get_pop_data_as_df(*args):
-
     pop_dtype = {
         std_col.STATE_FIPS_COL: str,
         std_col.POPULATION_COL: float,
@@ -318,7 +317,6 @@ def _get_pop_data_as_df(*args):
     return_value=_get_fips_codes_as_df(),
 )
 def testStandardizeCountyNames(mock_public_dataset: mock.MagicMock):
-
     mock_public_dataset.side_effect = [
         _get_county_names_as_df(),
     ]

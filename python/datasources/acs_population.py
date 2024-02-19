@@ -312,7 +312,6 @@ class ACSPopulationIngester:
     and once for state+national level."""
 
     def __init__(self, county_level: bool, year: str):
-
         # Whether data is at county level. If false, it is state level
         self.county_level = county_level
 
@@ -372,7 +371,6 @@ class ACSPopulationIngester:
         # iterate across the prepared dataframe items
         # writing single-years and also queuing for time-series
         for table_name, df in frames.items():
-
             # SINGLE YEAR TABLE
             if self.year == ACS_CURRENT_YEAR:
                 df_single_year = df.copy()
@@ -808,7 +806,6 @@ class ACSPopulation(DataSource):
         return 'ACS_POPULATION'
 
     def upload_to_gcs(self, gcs_bucket, **attrs):
-
         all_years = ACS_URLS_MAP.keys()
 
         file_diff = False

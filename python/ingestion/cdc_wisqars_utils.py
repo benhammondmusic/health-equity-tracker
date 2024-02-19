@@ -57,10 +57,7 @@ def convert_columns_to_numeric(df: pd.DataFrame, columns_to_convert: List[str]):
 
 
 def generate_cols_map(prefixes, suffix):
-    return {
-        prefix: prefix.replace(f"_{std_col.RAW_SUFFIX}", "") + f"_{suffix}"
-        for prefix in prefixes
-    }
+    return {prefix: prefix.replace(f"_{std_col.RAW_SUFFIX}", "") + f"_{suffix}" for prefix in prefixes}
 
 
 def contains_unknown(x):
