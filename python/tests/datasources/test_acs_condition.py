@@ -27,6 +27,7 @@ GOLDEN_BASE_TABLE_COUNTY_RACE = os.path.join(TEST_DIR, 'golden_data', 'race_coun
 # NOT THE NORMAL FETCHED ACS_POPULATION CALLS
 def _get_by_race_as_df(*args):
     _, filename = args
+    # pylint: disable=E1101
     return gcs_to_bq_util.values_json_to_df(
         os.path.join(TEST_DIR, filename), dtype={'state_fips': str, 'county_fips': str}
     ).reset_index(drop=True)
@@ -38,6 +39,7 @@ acsCondition.year = '2022'
 
 @mock.patch('ingestion.gcs_to_bq_util.load_values_as_df', side_effect=_get_by_race_as_df)
 def testSexNationalBaseTable(mock_acs: mock.MagicMock):
+    assert mock_acs.call_count == 0
     df = acsCondition.get_raw_data(
         'sex', 'national', get_acs_metadata_as_json(2022), ACS_ITEMS_2022_AND_LATER, 'some-bucket'
     )
@@ -60,6 +62,7 @@ def testSexNationalBaseTable(mock_acs: mock.MagicMock):
 
 @mock.patch('ingestion.gcs_to_bq_util.load_values_as_df', side_effect=_get_by_race_as_df)
 def testSexStateBaseTable(mock_acs: mock.MagicMock):
+    assert mock_acs.call_count == 0
     df = acsCondition.get_raw_data(
         'sex', 'state', get_acs_metadata_as_json(2022), ACS_ITEMS_2022_AND_LATER, 'some-bucket'
     )
@@ -73,6 +76,7 @@ def testSexStateBaseTable(mock_acs: mock.MagicMock):
 
     expected_df = pd.read_csv(GOLDEN_BASE_TABLE_STATE_SEX, dtype={'state_fips': str})
     cols = list(expected_df.columns)
+
     assert_frame_equal(
         df.sort_values(cols).reset_index(drop=True),
         expected_df.sort_values(cols).reset_index(drop=True),
@@ -82,6 +86,8 @@ def testSexStateBaseTable(mock_acs: mock.MagicMock):
 
 @mock.patch('ingestion.gcs_to_bq_util.load_values_as_df', side_effect=_get_by_race_as_df)
 def testSexCountyBaseTable(mock_acs: mock.MagicMock):
+    assert mock_acs.call_count == 0
+
     df = acsCondition.get_raw_data(
         'sex', 'county', get_acs_metadata_as_json(2022), ACS_ITEMS_2022_AND_LATER, 'some-bucket'
     )
@@ -104,6 +110,8 @@ def testSexCountyBaseTable(mock_acs: mock.MagicMock):
 
 @mock.patch('ingestion.gcs_to_bq_util.load_values_as_df', side_effect=_get_by_race_as_df)
 def testRaceCountyBaseTable(mock_acs: mock.MagicMock):
+    assert mock_acs.call_count == 0
+
     df = acsCondition.get_raw_data(
         'race', 'county', get_acs_metadata_as_json(2022), ACS_ITEMS_2022_AND_LATER, 'some-bucket'
     )
@@ -134,6 +142,9 @@ def testWriteToBqOverwriteEarliestYear(
 ):
     acsCondition2012 = AcsCondition()
     acsCondition2012.write_to_bq('dataset', 'gcs_bucket', year='2012')
+
+    assert mock_acs.call_count == 60
+    assert mock_json.call_count == 1
 
     for call in mock_bq.call_args_list:
         # This earliest year should OVERWRITE and create brand new BQ tables
@@ -180,7 +191,11 @@ def testWriteToBqAppend2022(
 
     # One call per race per geo, and then one call for sex at each geo
     # and one for age at each geo
-    assert mock_acs.call_count == ((8 * 3) + 3 + 3) * 2
+    RACES = 8
+    GEOS = 3
+    CONDITIONS = 2
+
+    assert mock_acs.call_count == ((RACES * GEOS) + GEOS + GEOS) * CONDITIONS
     assert mock_acs.call_args_list[0].args[1] == '2022-HEALTH_INSURANCE_BY_RACE_STATE_AIAN.json'
     assert mock_acs.call_args_list[1].args[1] == '2022-HEALTH_INSURANCE_BY_RACE_STATE_ASIAN.json'
     assert mock_acs.call_args_list[2].args[1] == '2022-HEALTH_INSURANCE_BY_RACE_STATE_HISP.json'
