@@ -75,6 +75,7 @@ UNINSURED_POPULATION_PCT = 'uninsured_population_pct'
 
 UNINSURED_PREFIX = 'uninsured'
 POVERTY_PREFIX = 'poverty'
+HIGH_SCHOOL_OR_HIGHER_PREFIX = 'high_school_or_higher'
 
 ABOVE_POVERTY_COL = "above_poverty_line"
 BELOW_POVERTY_COL = "below_poverty_line"

@@ -104,6 +104,49 @@ POVERTY_RACE_TO_CONCEPT_TITLE = {
     Race.MULTI.value: 'Poverty Status in the Past 12 Months by Sex by Age (Two or More Races)',
 }
 
+EDUCATION_RACE_TO_CONCEPT_TITLE = {
+    Race.AIAN.value: (
+        'Sex by Educational Attainment for the Population 25 Years and Over (American Indian and Alaska Native Alone)'
+    ),
+    Race.ASIAN.value: 'Sex by Educational Attainment for the Population 25 Years and Over (Asian Alone)',
+    Race.HISP.value: 'Sex by Educational Attainment for the Population 25 Years and Over (Hispanic or Latino)',
+    Race.BLACK.value: (
+        'Sex by Educational Attainment for the Population 25 Years and Over (Black or African American Alone)'
+    ),
+    Race.NHPI.value: (
+        (
+            'Sex by Educational Attainment for the Population 25 Years and Over '
+            '(Native Hawaiian and Other Pacific Islander Alone)'
+        )
+    ),
+    Race.WHITE.value: 'Sex by Educational Attainment for the Population 25 Years and Over (White Alone)',
+    Race.OTHER_STANDARD.value: (
+        'Sex by Educational Attainment for the Population 25 Years and Over (Some Other Race Alone)'
+    ),
+    Race.MULTI.value: 'Sex by Educational Attainment for the Population 25 Years and Over (Two or More Races)',
+}
+
+EDUCATION_RACE_TO_CONCEPT_CAPS = {
+    Race.AIAN.value: (
+        'SEX BY EDUCATIONAL ATTAINMENT FOR THE POPULATION 25 YEARS AND OVER (AMERICAN INDIAN AND ALASKA NATIVE ALONE)'
+    ),
+    Race.ASIAN.value: 'SEX BY EDUCATIONAL ATTAINMENT FOR THE POPULATION 25 YEARS AND OVER (ASIAN ALONE)',
+    Race.HISP.value: 'SEX BY EDUCATIONAL ATTAINMENT FOR THE POPULATION 25 YEARS AND OVER (HISPANIC OR LATINO)',
+    Race.BLACK.value: (
+        'SEX BY EDUCATIONAL ATTAINMENT FOR THE POPULATION 25 YEARS AND OVER (BLACK OR AFRICAN AMERICAN ALONE)'
+    ),
+    Race.NHPI.value: (
+        'SEX BY EDUCATIONAL ATTAINMENT FOR THE POPULATION 25 YEARS AND OVER '
+        '(NATIVE HAWAIIAN AND OTHER PACIFIC ISLANDER ALONE)'
+    ),
+    Race.WHITE.value: 'SEX BY EDUCATIONAL ATTAINMENT FOR THE POPULATION 25 YEARS AND OVER (WHITE ALONE)',
+    Race.OTHER_STANDARD.value: (
+        'SEX BY EDUCATIONAL ATTAINMENT FOR THE POPULATION 25 YEARS AND OVER (SOME OTHER RACE ALONE)'
+    ),
+    Race.MULTI.value: 'SEX BY EDUCATIONAL ATTAINMENT FOR THE POPULATION 25 YEARS AND OVER (TWO OR MORE RACES)',
+}
+
+
 # Acs variables are in the form C27001A_xxx0 C27001A_xxx2 etc
 # to determine age buckets.  The metadata variables are merged with the suffixes to form the entire metadata.
 HEALTH_INSURANCE_BY_RACE_GROUP_PREFIXES = {
@@ -128,6 +171,17 @@ POVERTY_BY_RACE_SEX_AGE_GROUP_PREFIXES = {
     'B17001I': Race.HISP.value,
 }
 
+EDUCATION_BY_RACE_SEX_AGE_GROUP_PREFIXES = {
+    'C15002A': Race.WHITE.value,
+    'C15002B': Race.BLACK.value,
+    'C15002C': Race.AIAN.value,
+    'C15002D': Race.ASIAN.value,
+    'C15002E': Race.NHPI.value,
+    'C15002F': Race.OTHER_STANDARD.value,
+    'C15002G': Race.MULTI.value,
+    'C15002I': Race.HISP.value,
+}
+
 
 def get_poverty_age_range(age_range):
     if age_range in {'0-4', '5-5'}:
@@ -147,11 +201,11 @@ class AcsItem:
     prefix_map: A dictionary mapping the acs prefix to its corresponding race.
     concept_map: A dictionary mapping to its corresponding census concept.
     sex_age_prefix: The acs prefix representing the sex and age data.
-    has_condition_key: Key in acs metadata representing the tracker's "yes"
+    has_condition_key_list: List[str] Keys in acs metadata representing the tracker's "yes"
                         state for this condition. For example, it would be the
                         key represting that someone has poverty, or does not
                         have health insurance.
-    does_not_have_condition_key: Key in acs metadata representing the tracker's
+    does_not_have_condition_keylist: List[str] Keys in acs metadata representing the tracker's
                                  "no" state for this condition.
     bq_prefix: The prefix to use for this conditions col names in big query,
                should be defined in standardized_columns.py"""
@@ -162,8 +216,8 @@ class AcsItem:
         concept_map,
         sex_age_prefix,
         sex_age_concept,
-        has_condition_key,
-        does_not_have_condition_key,
+        has_condition_key_list,
+        does_not_have_condition_key_list,
         bq_prefix,
     ):
 
@@ -171,10 +225,18 @@ class AcsItem:
         self.concept_map = concept_map
         self.sex_age_prefix = sex_age_prefix
         self.sex_age_concept = sex_age_concept
-        self.has_condition_key = has_condition_key
-        self.does_not_have_condition_key = does_not_have_condition_key
+        self.has_condition_key_list = (
+            has_condition_key_list if isinstance(has_condition_key_list, list) else [has_condition_key_list]
+        )
+        self.does_not_have_condition_key_list = (
+            does_not_have_condition_key_list
+            if isinstance(does_not_have_condition_key_list, list)
+            else [does_not_have_condition_key_list]
+        )
         self.bq_prefix = bq_prefix
 
+
+# Convert has_condition_key_list to a list if it's not already
 
 # Health insurance by Sex only has one prefix, and is kept
 # in the form of a dict to help with standardizing code flow
@@ -186,8 +248,13 @@ POVERTY_BY_SEX_AGE_GROUPS_PREFIX = 'B17001'
 POVERTY_BY_SEX_AGE_CONCEPT_CAPS = 'POVERTY STATUS IN THE PAST 12 MONTHS BY SEX BY AGE'
 POVERTY_BY_SEX_AGE_CONCEPT_TITLE = 'Poverty Status in the Past 12 Months by Sex by Age'
 
+EDUCATION_BY_SEX_AGE_GROUPS_PREFIX = 'C15002'
+EDUCATION_BY_SEX_AGE_CONCEPT_CAPS = 'EDUCATIONAL ATTAINMENT FOR THE POPULATION 25 YEARS AND OVER'
+EDUCATION_BY_SEX_AGE_CONCEPT_TITLE = 'Educational Attainment for the Population 25 Years and Over'
+
 HAS_HEALTH_INSURANCE = 'has_health_insurance'
 INCOME_UNDER_POVERTY = 'under_poverty_line'
+HAS_HIGH_SCHOOL = 'has_high_school'
 
 # Col names for temporary df, never written to bq
 AMOUNT = 'amount'
@@ -200,8 +267,16 @@ WITH_HEALTH_INSURANCE_KEY = 'With health insurance coverage'
 NOT_IN_POVERTY_KEY = 'Income in the past 12 months at or above poverty level'
 POVERTY_KEY = 'Income in the past 12 months below poverty level'
 
+HAS_HIGH_SCHOOL_KEY_LIST = [
+    'High school graduate (includes equivalency)',
+    "Some college or associate's degree",
+    "Bachelor's degree or higher",
+]
+NOT_HIGH_SCHOOL_KEY_LIST = ['Less than high school diploma']
+
 HEALTH_INSURANCE_MEASURE = 'health_insurance'
 POVERTY_MEASURE = 'poverty'
+EDUCATION_MEASURE = 'education'
 
 ACS_ITEMS_2021_AND_EARLIER = {
     HEALTH_INSURANCE_MEASURE: AcsItem(
@@ -222,6 +297,15 @@ ACS_ITEMS_2021_AND_EARLIER = {
         NOT_IN_POVERTY_KEY,
         std_col.POVERTY_PREFIX,
     ),
+    # EDUCATION_MEASURE: AcsItem(
+    #     EDUCATION_BY_RACE_SEX_AGE_GROUP_PREFIXES,
+    #     EDUCATION_RACE_TO_CONCEPT_CAPS,
+    #     EDUCATION_BY_SEX_AGE_GROUPS_PREFIX,
+    #     EDUCATION_BY_SEX_AGE_CONCEPT_CAPS,
+    #     HAS_HIGH_SCHOOL_KEY_LIST,
+    #     NOT_HIGH_SCHOOL_KEY_LIST,
+    #     std_col.HIGH_SCHOOL_OR_HIGHER_PREFIX,
+    # ),
 }
 
 
@@ -244,6 +328,15 @@ ACS_ITEMS_2022_AND_LATER = {
         NOT_IN_POVERTY_KEY,
         std_col.POVERTY_PREFIX,
     ),
+    # EDUCATION_MEASURE: AcsItem(
+    #     EDUCATION_BY_RACE_SEX_AGE_GROUP_PREFIXES,
+    #     EDUCATION_RACE_TO_CONCEPT_TITLE,
+    #     EDUCATION_BY_SEX_AGE_GROUPS_PREFIX,
+    #     EDUCATION_BY_SEX_AGE_CONCEPT_TITLE,
+    #     HAS_HIGH_SCHOOL_KEY_LIST,
+    #     NOT_HIGH_SCHOOL_KEY_LIST,
+    #     std_col.HIGH_SCHOOL_OR_HIGHER_PREFIX,
+    # ),
 }
 
 
@@ -539,6 +632,8 @@ class AcsCondition(DataSource):
             group_cols = [std_col.AGE_COL, tmp_amount_key]
             if demo != RACE:
                 group_cols = [std_col.SEX_COL] + group_cols
+        elif measure == EDUCATION_MEASURE:
+            group_cols = [tmp_amount_key, std_col.SEX_COL]
 
         group_vars = get_vars_for_group(concept, var_map, len(group_cols))
 
@@ -550,11 +645,11 @@ class AcsCondition(DataSource):
         # Create two separate df's, one for people with the condition, and one for
         # people without. Rename the columns so that we can merge them later.
         df_with_condition = df_with_without.loc[
-            df_with_without[tmp_amount_key] == acs_item.has_condition_key
+            df_with_without[tmp_amount_key].isin(acs_item.has_condition_key_list)
         ].reset_index(drop=True)
 
         df_without_condition = df_with_without.loc[
-            df_with_without[tmp_amount_key] == acs_item.does_not_have_condition_key
+            df_with_without[tmp_amount_key].isin(acs_item.does_not_have_condition_key_list)
         ].reset_index(drop=True)
 
         without_condition_raw_count = generate_column_name(measure, 'without')
