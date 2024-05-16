@@ -3,6 +3,7 @@ from datasources.data_source import DataSource
 from ingestion import url_file_to_gcs, gcs_to_bq_util, census
 import ingestion.standardized_columns as std_col
 from ingestion.constants import HISTORICAL, CURRENT
+from typing import List
 
 from ingestion.census import (
     parse_acs_metadata,
@@ -249,8 +250,8 @@ POVERTY_BY_SEX_AGE_CONCEPT_CAPS = 'POVERTY STATUS IN THE PAST 12 MONTHS BY SEX B
 POVERTY_BY_SEX_AGE_CONCEPT_TITLE = 'Poverty Status in the Past 12 Months by Sex by Age'
 
 EDUCATION_BY_SEX_AGE_GROUPS_PREFIX = 'C15002'
-EDUCATION_BY_SEX_AGE_CONCEPT_CAPS = 'EDUCATIONAL ATTAINMENT FOR THE POPULATION 25 YEARS AND OVER'
-EDUCATION_BY_SEX_AGE_CONCEPT_TITLE = 'Educational Attainment for the Population 25 Years and Over'
+EDUCATION_BY_SEX_AGE_CONCEPT_CAPS = 'SEX BY EDUCATIONAL ATTAINMENT FOR THE POPULATION 25 YEARS AND OVER'
+EDUCATION_BY_SEX_AGE_CONCEPT_TITLE = 'Sex by Educational Attainment for the Population 25 Years and Over'
 
 HAS_HEALTH_INSURANCE = 'has_health_insurance'
 INCOME_UNDER_POVERTY = 'under_poverty_line'
@@ -442,10 +443,13 @@ class AcsCondition(DataSource):
         self.base_url = ACS_URLS_MAP[year]
         if int(year) < 2022:
             acs_items = ACS_ITEMS_2021_AND_EARLIER
-            health_insurance_race_to_concept = HEALTH_INSURANCE_RACE_TO_CONCEPT_CAPS
+            any_concept_map = HEALTH_INSURANCE_RACE_TO_CONCEPT_CAPS
         else:
             acs_items = ACS_ITEMS_2022_AND_LATER
-            health_insurance_race_to_concept = HEALTH_INSURANCE_RACE_TO_CONCEPT_TITLE
+            any_concept_map = HEALTH_INSURANCE_RACE_TO_CONCEPT_TITLE
+
+        # Get race keys from any of the concepts
+        race_keys = list(any_concept_map.keys())
 
         metadata = census.fetch_acs_metadata(self.base_url)
         dfs = {}
@@ -453,7 +457,7 @@ class AcsCondition(DataSource):
             for demo in [RACE, AGE, SEX]:
 
                 df = self.get_raw_data(demo, geo, metadata, acs_items, gcs_bucket=gcs_bucket)
-                df = self.post_process(df, demo, geo, acs_items, health_insurance_race_to_concept)
+                df = self.post_process(df, demo, geo, acs_items, race_keys)
                 if demo == RACE:
                     add_race_columns_from_category_id(df)
 
@@ -540,6 +544,7 @@ class AcsCondition(DataSource):
         for acs_item in acs_items.values():
             groups.extend(list(acs_item.prefix_map.keys()) + [acs_item.sex_age_prefix])
 
+        print("groups", groups)
         var_map = parse_acs_metadata(metadata, groups)
 
         # Create merge cols for empty df to start merging
@@ -558,8 +563,11 @@ class AcsCondition(DataSource):
         # Create an empty df that we will merge each condition into
         df = pd.DataFrame(columns=merge_cols)
 
+        print("\n\n", demo, geo)
+
         if demo == RACE:
             for measure, acs_item in acs_items.items():
+                print(measure)
                 concept_dfs = []
                 for race, concept in acs_item.concept_map.items():
                     # Get cached data from GCS
@@ -576,17 +584,21 @@ class AcsCondition(DataSource):
                     concept_dfs.append(concept_df)
 
                 concept_df = pd.concat(concept_dfs)
+                print("race")
+                print(concept_df)
                 df = pd.merge(df, concept_df, on=merge_cols, how='outer')
 
             return df
 
         else:
             for measure, acs_item in acs_items.items():
-                concept_dfs = []
+                print(measure)
+
                 concept_df = gcs_to_bq_util.load_values_as_df(
                     gcs_bucket,
                     self.get_filename_sex(measure, geo == COUNTY_LEVEL, self.year),
                 )
+                print(concept_df)
                 concept_df = self.generate_df_for_concept(
                     measure,
                     acs_item,
@@ -633,9 +645,15 @@ class AcsCondition(DataSource):
             if demo != RACE:
                 group_cols = [std_col.SEX_COL] + group_cols
         elif measure == EDUCATION_MEASURE:
-            group_cols = [tmp_amount_key, std_col.SEX_COL]
+            group_cols = [std_col.SEX_COL, tmp_amount_key]
 
         group_vars = get_vars_for_group(concept, var_map, len(group_cols))
+
+        # print("---group_cols")
+        # print(group_cols)
+
+        # print("---group_vars")
+        # print(group_vars)
 
         # Creates a df with different rows for the amount of people
         # in a demographic group with and without the condition
@@ -684,7 +702,9 @@ class AcsCondition(DataSource):
         df = update_col_types(df)
 
         if geo == NATIONAL_LEVEL:
-            groupby_cols = [std_col.AGE_COL]
+            groupby_cols = []
+            if measure != EDUCATION_MEASURE:
+                groupby_cols.append(std_col.AGE_COL)
             if demo != RACE:
                 groupby_cols.append(std_col.SEX_COL)
 
@@ -712,7 +732,7 @@ class AcsCondition(DataSource):
 
         return df
 
-    def post_process(self, df, demo, geo, acs_items, health_insurance_race_to_concept):
+    def post_process(self, df: pd.DataFrame, demo: str, geo: str, acs_items, race_keys: List[str]):
         """Merge population data, state, and county names.
         Do all needed calculations to generate pct_rate,
         pct_share, and pct_relative_inequity columns.
@@ -720,7 +740,11 @@ class AcsCondition(DataSource):
 
         df: Dataframe with raw acs condition.
         demo: Demographic contained in the dataframe (race/sex/age).
-        geo: Geographic level contained in the dataframe (national/state/county)."""
+        geo: Geographic level contained in the dataframe (national/state/county).
+        acs_items: Dictionary containing the acs items.
+        race_keys: List of all race keys used by the race_to_concept maps
+
+        """
 
         demo_col = std_col.RACE_CATEGORY_ID_COL if demo == RACE else demo
         all_val = Race.ALL.value if demo == RACE else std_col.ALL_VALUE
@@ -734,8 +758,8 @@ class AcsCondition(DataSource):
         breakdown_vals_to_sum = None
 
         if demo == RACE:
-            all_races = health_insurance_race_to_concept.keys()
-            breakdown_vals_to_sum = list(all_races)
+
+            breakdown_vals_to_sum = race_keys
             breakdown_vals_to_sum.remove(Race.HISP.value)
 
         value_cols = []
