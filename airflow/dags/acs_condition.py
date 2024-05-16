@@ -19,6 +19,7 @@ data_ingestion_dag = DAG(
 
 # CACHE ACS SOURCE INTO TMP JSON IN BUCKETS
 
+
 # acs_condition_gcs_payload_2012 = util.generate_gcs_payload(_ACS_WORKFLOW_ID, year='2012')
 # acs_condition_gcs_operator_2012 = util.create_gcs_ingest_operator(
 #     'acs_condition_to_gcs_2012', acs_condition_gcs_payload_2012, data_ingestion_dag
