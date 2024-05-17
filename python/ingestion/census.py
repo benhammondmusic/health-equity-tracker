@@ -104,9 +104,18 @@ def parse_acs_metadata(acs_metadata, groups):
     groups: The list of group ids to include."""
     output_vars = {}
     for variable_id, metadata in acs_metadata["variables"].items():
+
         group = metadata.get("group")
+
+        # print("group", group)
+
         if group in groups and metadata["label"].startswith("Estimate!!Total"):
+            print("variable_id", variable_id)
+            print("metadata", metadata)
             output_vars[variable_id] = metadata
+
+    # print("output_vars", output_vars)
+
     return output_vars
 
 
@@ -136,13 +145,18 @@ def get_vars_for_group(group_concept, var_map, num_breakdowns):
         # print("group:", group)
         # print("metadata:", metadata)
         # print("<><><>")
+        # if group_concept == "Sex by Educational Attainment for the Population 25 Years and Over":
+        # print("metadata.get('concept')", metadata.get("concept"))
+        # print("group_concept", group_concept)
+        # print("+++")
 
         if metadata.get("concept") == group_concept:
-            # print("group", group)
-            # print("metadata.get('concept')", metadata.get("concept"))
+
+            print("MATCH" + group_concept)
 
             # TODO switch to use explicit prefix to handle median, etc
             parts = metadata["label"].split("!!")
+
             # If length is greater than (2 + num_breakdowns), it means it's a
             # sub-category, which we don't need to include. If the length is
             # less than (2 + num_breakdowns), it means it's a combination of

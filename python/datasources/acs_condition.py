@@ -173,14 +173,14 @@ POVERTY_BY_RACE_SEX_AGE_GROUP_PREFIXES = {
 }
 
 EDUCATION_BY_RACE_SEX_AGE_GROUP_PREFIXES = {
-    'C15002A': Race.WHITE.value,
-    'C15002B': Race.BLACK.value,
-    'C15002C': Race.AIAN.value,
-    'C15002D': Race.ASIAN.value,
-    'C15002E': Race.NHPI.value,
-    'C15002F': Race.OTHER_STANDARD.value,
-    'C15002G': Race.MULTI.value,
-    'C15002I': Race.HISP.value,
+    'B15002A': Race.WHITE.value,
+    'B15002B': Race.BLACK.value,
+    'B15002C': Race.AIAN.value,
+    'B15002D': Race.ASIAN.value,
+    'B15002E': Race.NHPI.value,
+    'B15002F': Race.OTHER_STANDARD.value,
+    'B15002G': Race.MULTI.value,
+    'B15002I': Race.HISP.value,
 }
 
 
@@ -202,6 +202,7 @@ class AcsItem:
     prefix_map: A dictionary mapping the acs prefix to its corresponding race.
     concept_map: A dictionary mapping to its corresponding census concept.
     sex_age_prefix: The acs prefix representing the sex and age data.
+    sex_age_concept: The census concept representing the sex and age data.
     has_condition_key_list: List[str] Keys in acs metadata representing the tracker's "yes"
                         state for this condition. For example, it would be the
                         key represting that someone has poverty, or does not
@@ -249,7 +250,7 @@ POVERTY_BY_SEX_AGE_GROUPS_PREFIX = 'B17001'
 POVERTY_BY_SEX_AGE_CONCEPT_CAPS = 'POVERTY STATUS IN THE PAST 12 MONTHS BY SEX BY AGE'
 POVERTY_BY_SEX_AGE_CONCEPT_TITLE = 'Poverty Status in the Past 12 Months by Sex by Age'
 
-EDUCATION_BY_SEX_AGE_GROUPS_PREFIX = 'C15002'
+EDUCATION_BY_SEX_AGE_GROUPS_PREFIX = 'B15002'
 EDUCATION_BY_SEX_AGE_CONCEPT_CAPS = 'SEX BY EDUCATIONAL ATTAINMENT FOR THE POPULATION 25 YEARS AND OVER'
 EDUCATION_BY_SEX_AGE_CONCEPT_TITLE = 'Sex by Educational Attainment for the Population 25 Years and Over'
 
@@ -268,12 +269,33 @@ WITH_HEALTH_INSURANCE_KEY = 'With health insurance coverage'
 NOT_IN_POVERTY_KEY = 'Income in the past 12 months at or above poverty level'
 POVERTY_KEY = 'Income in the past 12 months below poverty level'
 
+# HAS_HIGH_SCHOOL_KEY_LIST = [
+#     'High school graduate (includes equivalency)',
+#     "Some college or associate's degree",
+#     "Bachelor's degree or higher",
+# ]
+# NOT_HIGH_SCHOOL_KEY_LIST = ['Less than high school diploma']
+
 HAS_HIGH_SCHOOL_KEY_LIST = [
-    'High school graduate (includes equivalency)',
-    "Some college or associate's degree",
-    "Bachelor's degree or higher",
+    "Doctorate degree",
+    "Master's degree",
+    "Professional school degree",
+    "Bachelor's degree",
+    "Associate's degree",
+    "Some college, 1 or more years, no degree",
+    "High school graduate (includes equivalency)",
 ]
-NOT_HIGH_SCHOOL_KEY_LIST = ['Less than high school diploma']
+
+NOT_HIGH_SCHOOL_KEY_LIST = [
+    "12th grade, no diploma",
+    "11th grade",
+    "10th grade",
+    "9th grade",
+    "7th and 8th grade",
+    "5th and 6th grade",
+    "Nursery to 4th grade",
+    "No schooling completed",
+]
 
 HEALTH_INSURANCE_MEASURE = 'health_insurance'
 POVERTY_MEASURE = 'poverty'
@@ -647,13 +669,15 @@ class AcsCondition(DataSource):
         elif measure == EDUCATION_MEASURE:
             group_cols = [std_col.SEX_COL, tmp_amount_key]
 
+        print("concept", concept)
+
         group_vars = get_vars_for_group(concept, var_map, len(group_cols))
 
-        # print("---group_cols")
-        # print(group_cols)
+        print("---group_cols")
+        print(group_cols)
 
-        # print("---group_vars")
-        # print(group_vars)
+        print("---group_vars")
+        print(group_vars)
 
         # Creates a df with different rows for the amount of people
         # in a demographic group with and without the condition
