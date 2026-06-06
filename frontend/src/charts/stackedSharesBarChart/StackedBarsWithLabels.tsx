@@ -24,7 +24,8 @@ interface StackedBarsWithLabelsProps {
     lightValue: number
     darkValue: number
     demographic: string
-    event: React.MouseEvent
+    x: number
+    y: number
   }) => void
   onCloseTooltip: () => void
 }
@@ -84,7 +85,8 @@ const StackedBarsWithLabels = (props: StackedBarsWithLabelsProps) => {
                 lightValue,
                 darkValue,
                 demographic: d[demographicType],
-                event: e,
+                x: e.clientX,
+                y: e.clientY,
               })
             }}
             onMouseLeave={() => {
