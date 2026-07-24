@@ -94,7 +94,6 @@ export default function InsightVisualizationCard({
       cancelled = true
     }
     // peerConfig.peerQuery is a fresh object each render; peerQueryKey identifies it.
-    // biome-ignore lint/correctness/useExhaustiveDependencies: fetch is keyed by peerQueryKey
   }, [peerMode, isOpen, peerQueryKey])
 
   const peersReady =
