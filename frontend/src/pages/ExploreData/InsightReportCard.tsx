@@ -17,11 +17,11 @@ import FlagInsightButton from '../../cards/ui/FlagInsightButton'
 import HetHighlightedText from '../../styles/HetComponents/HetHighlightedText'
 import {
   generateReportInsight,
+  previewReportInsight,
   type ReportInsightSectionKey,
   type ReportInsightSections,
 } from '../../utils/generateReportInsight'
 import { useParamState } from '../../utils/hooks/useParamState'
-import { AI_INSIGHTS_LINK } from '../../utils/internalRoutes'
 import type { MadLibId } from '../../utils/MadLibs'
 import {
   reportInsightsAtom,
@@ -228,18 +228,21 @@ export default function InsightReportCard(props: InsightReportCardProps) {
             <Divider />
 
             <p className='m-0 text-alt-dark text-smallest'>
-              <a
-                href={AI_INSIGHTS_LINK}
-                className='text-alt-dark hover:text-alt-black'
-              >
-                AI-generated.
-              </a>{' '}
-              Verify with chart data.{' '}
               <FlagInsightButton
                 cacheKey={serverCacheKey ?? undefined}
                 content={insightText}
                 topic={dataTypeConfig?.dataTypeId}
                 onFlagged={handleFlagged}
+                onFetchPrompt={
+                  dataTypeConfig && fips && demographicType
+                    ? () =>
+                        previewReportInsight(
+                          dataTypeConfig,
+                          demographicType,
+                          fips,
+                        )
+                    : undefined
+                }
               />
             </p>
           </>

@@ -16,12 +16,12 @@ import type {
 import {
   buildInsightFocusSuffix,
   generateCardInsight,
+  previewCardInsight,
   summarizePeerComparison,
 } from '../../utils/generateVisualizationInsight'
 import { getDataManager } from '../../utils/globals'
 import type { ScrollableHashId } from '../../utils/hooks/useStepObserver'
 import { parseSingleInsight } from '../../utils/insightPayload'
-import { AI_INSIGHTS_LINK } from '../../utils/internalRoutes'
 import {
   cardInsightOpenAtom,
   cardInsightsAtom,
@@ -364,18 +364,26 @@ export default function InsightVisualizationCard({
               <HetHighlightedText section={insight} />
             </p>
             <p className='m-0 mt-2 text-alt-dark text-smallest'>
-              <a
-                href={AI_INSIGHTS_LINK}
-                className='text-alt-dark hover:text-alt-black'
-              >
-                AI-generated.
-              </a>{' '}
-              Verify with chart data.{' '}
               <FlagInsightButton
                 cacheKey={serverCacheKey ?? undefined}
                 content={insight.text}
                 topic={dataTypeConfig.dataTypeId}
                 onFlagged={handleFlagged}
+                onFetchPrompt={() =>
+                  previewCardInsight(
+                    scrollToHash,
+                    dataTypeConfig,
+                    demographicType,
+                    fips,
+                    queryResponses,
+                    isCompareCard,
+                    {
+                      activeDemographicGroup,
+                      selectedGroups,
+                      peerComparison: peerComparison ?? undefined,
+                    },
+                  )
+                }
               />
             </p>
           </>

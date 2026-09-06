@@ -30,6 +30,7 @@ import {
 import { getDataManager } from './globals'
 import {
   fetchInsight,
+  fetchInsightPreview,
   type InsightMetric,
   type ReportSectionDescriptor,
   toInsightMetric,
@@ -346,5 +347,31 @@ export async function generateReportInsight(
       rateLimited: false,
       error: ERROR_GENERATING_INSIGHT,
     }
+  }
+}
+
+export async function previewReportInsight(
+  dataTypeConfig: DataTypeConfig,
+  demographicType: DemographicType,
+  fips: Fips,
+): Promise<string | null> {
+  try {
+    const described = await loadReportData(
+      dataTypeConfig,
+      demographicType,
+      fips,
+    )
+    if (!described) return null
+    return fetchInsightPreview({
+      kind: 'report',
+      demographicType,
+      topic: dataTypeConfig.fullDisplayName,
+      location: fips.getSentenceDisplayName(),
+      placeNoun: fips.getPluralChildFipsTypeDisplayName(),
+      metricConfig: described.metricConfig,
+      sections: described.sections,
+    })
+  } catch {
+    return null
   }
 }

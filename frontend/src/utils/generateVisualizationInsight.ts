@@ -15,6 +15,7 @@ import type { Fips } from '../data/utils/Fips'
 import type { ScrollableHashId } from './hooks/useStepObserver'
 import {
   fetchInsight,
+  fetchInsightPreview,
   type InsightResult,
   toInsightMetric,
 } from './insightDescriptor'
@@ -364,6 +365,40 @@ export function getInsightDataStatus(
   return 'empty'
 }
 
+function buildCardDescriptor(
+  hashId: ScrollableHashId,
+  dataTypeConfig: DataTypeConfig,
+  demographicType: DemographicType,
+  fips?: Fips,
+  queryResponses?: MetricQueryResponse[],
+  isCompareCard?: boolean,
+  context?: InsightContext,
+) {
+  const resolved = insightRows(hashId, dataTypeConfig, queryResponses)
+  if (!resolved) return null
+  // The table's share columns are already in this response: TableCard requests
+  // them, and getMetricIdToConfigMap pulls in each config's
+  // populationComparisonMetric. Nothing extra is fetched here.
+  const shareColumns =
+    hashId === 'data-table'
+      ? resolveTableShareMetrics(dataTypeConfig)
+      : undefined
+  return {
+    kind: 'card' as const,
+    hashId,
+    demographicType,
+    topic: dataTypeConfig.fullDisplayName,
+    location: fips?.getSentenceDisplayName() ?? 'the United States',
+    metricConfig: toInsightMetric(resolved.metricConfig),
+    rows: resolved.rows,
+    context,
+    isCompareCard,
+    shareConfig: toInsightMetric(shareColumns?.shareConfig),
+    populationConfig: toInsightMetric(shareColumns?.populationConfig),
+    generalPopulationLabel: shareColumns?.generalPopulationLabel,
+  }
+}
+
 // Describes the card to the server, which renders the prompt, derives the cache
 // key, and generates. Focus (highlighted map group, selected trend lines) needs
 // no separate scope: it changes which rows the descriptor carries, so the prompt
@@ -377,30 +412,38 @@ export async function generateCardInsight(
   isCompareCard?: boolean,
   context?: InsightContext,
 ): Promise<InsightResult> {
-  const resolved = insightRows(hashId, dataTypeConfig, queryResponses)
-  if (!resolved) {
-    return { content: '', rateLimited: false, error: true }
-  }
-  // The table's share columns are already in this response: TableCard requests
-  // them, and getMetricIdToConfigMap pulls in each config's
-  // populationComparisonMetric. Nothing extra is fetched here.
-  const shareColumns =
-    hashId === 'data-table'
-      ? resolveTableShareMetrics(dataTypeConfig)
-      : undefined
-
-  return fetchInsight({
-    kind: 'card',
+  const descriptor = buildCardDescriptor(
     hashId,
+    dataTypeConfig,
     demographicType,
-    topic: dataTypeConfig.fullDisplayName,
-    location: fips?.getSentenceDisplayName() ?? 'the United States',
-    metricConfig: toInsightMetric(resolved.metricConfig),
-    rows: resolved.rows,
-    context,
+    fips,
+    queryResponses,
     isCompareCard,
-    shareConfig: toInsightMetric(shareColumns?.shareConfig),
-    populationConfig: toInsightMetric(shareColumns?.populationConfig),
-    generalPopulationLabel: shareColumns?.generalPopulationLabel,
-  })
+    context,
+  )
+  if (!descriptor) return { content: '', rateLimited: false, error: true }
+  return fetchInsight(descriptor)
+}
+
+// Returns the rendered prompt for transparency disclosure, without generating.
+export async function previewCardInsight(
+  hashId: ScrollableHashId,
+  dataTypeConfig: DataTypeConfig,
+  demographicType: DemographicType,
+  fips?: Fips,
+  queryResponses?: MetricQueryResponse[],
+  isCompareCard?: boolean,
+  context?: InsightContext,
+): Promise<string | null> {
+  const descriptor = buildCardDescriptor(
+    hashId,
+    dataTypeConfig,
+    demographicType,
+    fips,
+    queryResponses,
+    isCompareCard,
+    context,
+  )
+  if (!descriptor) return null
+  return fetchInsightPreview(descriptor)
 }

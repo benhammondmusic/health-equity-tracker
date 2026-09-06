@@ -188,3 +188,28 @@ export async function fetchInsight(
     return { content: '', rateLimited: false, error: true }
   }
 }
+
+// Renders the prompt the server would send to the model, without generating or
+// consuming quota. Used by the transparency disclosure in FlagInsightButton.
+export async function fetchInsightPreview(
+  descriptor: InsightDescriptor,
+): Promise<string | null> {
+  const baseApiUrl = import.meta.env.VITE_BASE_API_URL
+  const url = baseApiUrl ? `${baseApiUrl}${API_ENDPOINT}` : API_ENDPOINT
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...descriptor,
+        ...currentViewLocation(),
+        preview: true,
+      }),
+    })
+    if (!response.ok) return null
+    const data = await response.json()
+    return data.prompt ?? null
+  } catch {
+    return null
+  }
+}

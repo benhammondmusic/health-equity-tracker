@@ -9,10 +9,12 @@ import type { DemographicType } from '../data/query/Breakdowns'
 import type { Fips } from '../data/utils/Fips'
 import { flag } from '../featureFlags'
 import HetHighlightedText from '../styles/HetComponents/HetHighlightedText'
-import { generateContrastInsight } from '../utils/generateContrastInsight'
+import {
+  generateContrastInsight,
+  previewContrastInsight,
+} from '../utils/generateContrastInsight'
 import type { ScrollableHashId } from '../utils/hooks/useStepObserver'
 import { parseSingleInsight } from '../utils/insightPayload'
-import { AI_INSIGHTS_LINK } from '../utils/internalRoutes'
 import {
   cardQueryResponsesAtom,
   contrastInsightOpenAtom,
@@ -209,18 +211,26 @@ export default function ContrastInsightSection({
             <HetHighlightedText section={contrastInsight} />
           </p>
           <p className='m-0 mt-2 text-alt-dark text-smallest'>
-            <a
-              href={AI_INSIGHTS_LINK}
-              className='text-alt-dark hover:text-alt-black'
-            >
-              AI-generated.
-            </a>{' '}
-            Verify with chart data.{' '}
             <FlagInsightButton
               cacheKey={serverCacheKey ?? undefined}
               content={contrastInsight.text}
               topic={dataTypeConfig1.dataTypeId}
               onFlagged={handleFlagged}
+              onFetchPrompt={
+                queryResponses1 && queryResponses2
+                  ? () =>
+                      previewContrastInsight(
+                        hashId,
+                        dataTypeConfig1,
+                        dataTypeConfig2,
+                        fips1,
+                        fips2,
+                        demographicType,
+                        queryResponses1,
+                        queryResponses2,
+                      )
+                  : undefined
+              }
             />
           </p>
         </div>

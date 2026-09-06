@@ -7,6 +7,7 @@ import { getPrimaryMetricConfig } from './generateVisualizationInsight'
 import type { ScrollableHashId } from './hooks/useStepObserver'
 import {
   fetchInsight,
+  fetchInsightPreview,
   type InsightMetric,
   type InsightResult,
   toInsightMetric,
@@ -39,6 +40,22 @@ function contrastView(
   }
 }
 
+function buildContrastDescriptor(
+  hashId: ScrollableHashId,
+  dataTypeConfig1: DataTypeConfig,
+  dataTypeConfig2: DataTypeConfig,
+  fips1: Fips,
+  fips2: Fips,
+  demographicType: DemographicType,
+  queryResponses1: MetricQueryResponse[],
+  queryResponses2: MetricQueryResponse[],
+) {
+  const viewA = contrastView(hashId, dataTypeConfig1, fips1, queryResponses1)
+  const viewB = contrastView(hashId, dataTypeConfig2, fips2, queryResponses2)
+  if (!viewA || !viewB) return null
+  return { kind: 'contrast' as const, hashId, demographicType, viewA, viewB }
+}
+
 export async function generateContrastInsight(
   hashId: ScrollableHashId,
   dataTypeConfig1: DataTypeConfig,
@@ -49,17 +66,40 @@ export async function generateContrastInsight(
   queryResponses1: MetricQueryResponse[],
   queryResponses2: MetricQueryResponse[],
 ): Promise<InsightResult> {
-  const viewA = contrastView(hashId, dataTypeConfig1, fips1, queryResponses1)
-  const viewB = contrastView(hashId, dataTypeConfig2, fips2, queryResponses2)
-  if (!viewA || !viewB) {
-    return { content: '', rateLimited: false, error: true }
-  }
-
-  return fetchInsight({
-    kind: 'contrast',
+  const descriptor = buildContrastDescriptor(
     hashId,
+    dataTypeConfig1,
+    dataTypeConfig2,
+    fips1,
+    fips2,
     demographicType,
-    viewA,
-    viewB,
-  })
+    queryResponses1,
+    queryResponses2,
+  )
+  if (!descriptor) return { content: '', rateLimited: false, error: true }
+  return fetchInsight(descriptor)
+}
+
+export async function previewContrastInsight(
+  hashId: ScrollableHashId,
+  dataTypeConfig1: DataTypeConfig,
+  dataTypeConfig2: DataTypeConfig,
+  fips1: Fips,
+  fips2: Fips,
+  demographicType: DemographicType,
+  queryResponses1: MetricQueryResponse[],
+  queryResponses2: MetricQueryResponse[],
+): Promise<string | null> {
+  const descriptor = buildContrastDescriptor(
+    hashId,
+    dataTypeConfig1,
+    dataTypeConfig2,
+    fips1,
+    fips2,
+    demographicType,
+    queryResponses1,
+    queryResponses2,
+  )
+  if (!descriptor) return null
+  return fetchInsightPreview(descriptor)
 }
