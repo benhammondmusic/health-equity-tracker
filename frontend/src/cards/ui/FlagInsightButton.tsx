@@ -107,11 +107,8 @@ export default function FlagInsightButton(props: FlagInsightButtonProps) {
         <DialogTitle>Learn more or report an issue</DialogTitle>
         <DialogContent>
           {/* Report form — primary action */}
-          <p className='mt-0 mb-2 font-medium text-alt-dark text-small'>
-            What's the issue?{' '}
-            <span className='font-normal text-alt-dark text-smallest'>
-              (required)
-            </span>
+          <p className='mt-0 mb-2 font-medium text-alt-dark text-smallest'>
+            What's the issue? <span className='font-normal'>(required)</span>
           </p>
           <RadioGroup
             value={reason}
@@ -122,7 +119,11 @@ export default function FlagInsightButton(props: FlagInsightButtonProps) {
                 key={option.value}
                 value={option.value}
                 control={<Radio size='small' />}
-                label={option.label}
+                label={
+                  <span className='text-alt-dark text-smallest'>
+                    {option.label}
+                  </span>
+                }
               />
             ))}
           </RadioGroup>
@@ -135,7 +136,11 @@ export default function FlagInsightButton(props: FlagInsightButtonProps) {
             size='small'
             fullWidth
             className='mt-3'
-            slotProps={{ htmlInput: { maxLength: NOTE_MAX_LENGTH } }}
+            slotProps={{
+              htmlInput: { maxLength: NOTE_MAX_LENGTH },
+              inputLabel: { className: 'text-smallest' },
+              formHelperText: { className: 'text-smallest' },
+            }}
             helperText={`${note.length}/${NOTE_MAX_LENGTH}`}
           />
           {error && (
