@@ -107,7 +107,10 @@ export default function FlagInsightButton(props: FlagInsightButtonProps) {
         <DialogContent>
           {/* Report form — primary action */}
           <p className='mt-0 mb-2 font-medium text-alt-dark text-small'>
-            What's the issue?
+            What's the issue?{' '}
+            <span className='font-normal text-alt-dark text-smallest'>
+              (required)
+            </span>
           </p>
           <RadioGroup
             value={reason}
@@ -190,11 +193,11 @@ export default function FlagInsightButton(props: FlagInsightButtonProps) {
           )}
         </DialogContent>
         <DialogActions>
-          <Button size='small' onClick={handleClose}>
+          <Button className='px-3 py-1.5' onClick={handleClose}>
             Cancel
           </Button>
           <Button
-            size='small'
+            className='px-4 py-1.5'
             variant='contained'
             onClick={handleSubmit}
             disabled={!reason || submitting}
