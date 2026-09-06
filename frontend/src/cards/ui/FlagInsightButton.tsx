@@ -100,7 +100,8 @@ export default function FlagInsightButton(props: FlagInsightButtonProps) {
         disabled={!props.cacheKey}
         className='cursor-pointer border-0 bg-transparent p-0 text-alt-dark text-smallest hover:text-alt-black disabled:opacity-50'
       >
-        AI-generated. Click to learn more or report an issue.
+        AI-generated. Click to report a harmful or inaccurate insight, or learn
+        more.
       </button>
       <Dialog open={open} onClose={handleClose} maxWidth='sm' fullWidth>
         <DialogTitle>Learn more or report an issue</DialogTitle>
@@ -180,7 +181,13 @@ export default function FlagInsightButton(props: FlagInsightButtonProps) {
                       </IconButton>
                     </Tooltip>
                   </div>
-                  <pre className='m-0 max-h-48 overflow-auto whitespace-pre-wrap break-words font-roboto-condensed text-alt-dark text-smallest'>
+                  <pre
+                    // biome-ignore lint/a11y/noNoninteractiveTabindex: scrollable region needs keyboard access per WCAG 2.1.1
+                    tabIndex={0}
+                    className='m-0 max-h-48 overflow-auto whitespace-pre-wrap break-words font-roboto-condensed text-alt-dark text-smallest'
+                    role='region'
+                    aria-label='Rendered model prompt'
+                  >
                     {prompt}
                   </pre>
                 </div>

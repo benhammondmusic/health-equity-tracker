@@ -34,7 +34,7 @@ test('card insight renders text, disclosure, and highlight', async ({
   expect(text?.trim().length).toBeGreaterThan(0)
 
   // Disclosure line must appear exactly as written in the component.
-  await expect(insightCard).toContainText('AI-generated. Click to learn more or report an issue.')
+  await expect(insightCard).toContainText('AI-generated. Click to report a harmful or inaccurate insight, or learn more.')
 
   // The highlighted phrase renders as a span inside the bold text.
   await expect(
