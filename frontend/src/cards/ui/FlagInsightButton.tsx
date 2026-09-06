@@ -200,11 +200,11 @@ export default function FlagInsightButton(props: FlagInsightButtonProps) {
           )}
         </DialogContent>
         <DialogActions>
-          <Button className='px-3 py-1.5' onClick={handleClose}>
+          <Button className='rounded-md px-3 py-1.5' onClick={handleClose}>
             Cancel
           </Button>
           <Button
-            className='px-4 py-1.5'
+            className='rounded-md px-4 py-1.5'
             variant='contained'
             onClick={handleSubmit}
             disabled={!reason || submitting}
