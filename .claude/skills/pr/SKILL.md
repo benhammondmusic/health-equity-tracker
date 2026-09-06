@@ -53,6 +53,20 @@ echo "=== commits on branch ==="; git log origin/main..HEAD --oneline
 
 If `FORK_REMOTE` is empty, print a warning and ask the user to identify their fork remote with `git remote -v`, then continue using that name.
 
+**Verify the PR head is on the fork, not on `origin`.** This repo's policy is that all feature branches live on the contributor's personal fork. A PR whose head is on `SatcherInstitute` directly was pushed to `origin` by mistake and must be corrected before proceeding:
+
+```bash
+HEAD_OWNER=$(gh pr view <number> --json headRepositoryOwner -q .headRepositoryOwner.login)
+echo "Head owner: $HEAD_OWNER"
+```
+
+If `HEAD_OWNER` is `SatcherInstitute` (not the user's login): stop, tell the user, then:
+1. Push all commits to the fork: `git push $FORK_REMOTE HEAD`
+2. Close the misplaced PR: `gh pr close <number> --comment "Reopening from fork."`
+3. Save the old PR body: `gh pr view <number> --json body -q .body > /tmp/old-pr-body.md`
+4. Create a new PR from the fork: `gh pr create --base main --head ${GH_USER}:${headRefName} --title "<same title>" --body-file /tmp/old-pr-body.md`
+5. Continue with the new PR number for all remaining steps.
+
 That single block covers the fork remote, the file classification in Step 1b, the behind-main check in Step 2c, and the commit list Step 6 needs. Do not re-run any of them later; reuse this output.
 
 ---
