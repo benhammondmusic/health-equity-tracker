@@ -163,7 +163,7 @@ export default function FlagInsightButton(props: FlagInsightButtonProps) {
           {props.onFetchPrompt && (
             <div className='mt-4'>
               <p className='mt-0 mb-2 text-alt-dark text-smallest'>
-                Data prompt sent to the model
+                Data prompt sent to the model:
               </p>
               {promptLoading ? (
                 <div className='flex items-center gap-2'>
