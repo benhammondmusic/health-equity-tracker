@@ -62,9 +62,19 @@ echo "Head owner: $HEAD_OWNER"
 
 If `HEAD_OWNER` is `SatcherInstitute` (not the user's login): stop, tell the user, then:
 1. Push all commits to the fork: `git push $FORK_REMOTE HEAD`
-2. Close the misplaced PR: `gh pr close <number> --comment "Reopening from fork."`
-3. Save the old PR body: `gh pr view <number> --json body -q .body > /tmp/old-pr-body.md`
-4. Create a new PR from the fork: `gh pr create --base main --head ${GH_USER}:${headRefName} --title "<same title>" --body-file /tmp/old-pr-body.md`
+2. Capture the original PR metadata:
+   ```bash
+   OLD_TITLE=$(gh pr view <number> --json title -q .title)
+   OLD_BODY=$(gh pr view <number> --json body -q .body)
+   HEAD_REF=$(gh pr view <number> --json headRefName -q .headRefName)
+   ```
+3. Close the misplaced PR: `gh pr close <number> --comment "Reopening from fork."`
+4. Create a new PR from the fork:
+   ```bash
+   gh pr create --base main --head "${GH_USER}:${HEAD_REF}" \
+     --title "$OLD_TITLE" \
+     --body "$OLD_BODY"
+   ```
 5. Continue with the new PR number for all remaining steps.
 
 That single block covers the fork remote, the file classification in Step 1b, the behind-main check in Step 2c, and the commit list Step 6 needs. Do not re-run any of them later; reuse this output.

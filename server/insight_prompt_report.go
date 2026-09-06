@@ -372,7 +372,7 @@ func buildReportInsightPrompt(topic, location, demographicLabel string, data rep
 	}
 	temporalClause := ""
 	if temporalSection != "" {
-		temporalClause = " Then say whether the gap between groups has widened or narrowed across the reported periods, naming the highest point if one is given."
+		temporalClause = " Then say whether the gap between groups has widened, narrowed, or remained stable across the reported periods, naming the highest point if one is given."
 	}
 
 	// A rate gap says a group is worse off. Set against the group's share of the
