@@ -370,9 +370,20 @@ func buildReportInsightPrompt(topic, location, demographicLabel string, data rep
 	if ageAdjustedSection != "" {
 		ageAdjustedClause = " Then use the age-adjusted ratios to say whether the gap holds once differences in age between groups are accounted for."
 	}
+	// Only ask for a between-group trend when multiple groups are present in the
+	// temporal data. A section with only the "All" row has no gap to describe.
 	temporalClause := ""
 	if temporalSection != "" {
-		temporalClause = " Then say whether the gap between groups has widened, narrowed, or remained stable across the reported periods, naming the highest point if one is given."
+		hasMultipleGroups := false
+		for _, line := range strings.Split(temporalSection, "\n") {
+			if strings.HasPrefix(line, "- ") && !strings.HasPrefix(line, "- All:") {
+				hasMultipleGroups = true
+				break
+			}
+		}
+		if hasMultipleGroups {
+			temporalClause = " Then say whether the gap between groups has widened, narrowed, or remained stable across the reported periods, naming the highest point if one is given."
+		}
 	}
 
 	// A rate gap says a group is worse off. Set against the group's share of the
