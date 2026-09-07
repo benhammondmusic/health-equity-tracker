@@ -60,6 +60,7 @@ DEST_CACHE_BUCKET="$DEFAULT_DEST_CACHE_BUCKET"
 
 MODE="list" # list | review | ci | switch-status | disable-serving | enable-serving | disable-generation | enable-generation | sync-cache
 DRY_RUN=true
+LABEL="" # optional environment label for --ci output (e.g. "test" or "prod")
 
 GENERATION_SWITCH="insights-generation-disabled"
 SERVING_SWITCH="insights-serving-disabled"
@@ -95,6 +96,7 @@ Options:
   --dest-flagged DEST_FLAGGED     Destination flagged-insights bucket (default: $DEFAULT_DEST_FLAGGED_BUCKET)
   --dest-cache DEST_CACHE         Destination insights-cache bucket (default: $DEFAULT_DEST_CACHE_BUCKET)
   --execute            With --sync-cache: actually copy (default is dry-run)
+  --label LABEL        Prefix each --ci output line with [LABEL] (e.g. "test" or "prod")
   -h, --help           Show this help and exit
 
 Kill switch notes:
@@ -136,6 +138,7 @@ while [[ $# -gt 0 ]]; do
         --enable-generation) MODE="enable-generation"; shift ;;
         --sync-cache) MODE="sync-cache"; shift ;;
         --execute) DRY_RUN=false; shift ;;
+        --label) require_value "$1" "$#"; LABEL="$2"; shift 2 ;;
         -p) require_value "$1" "$#"; PROJECT_ID="$2"; shift 2 ;;
         -b) require_value "$1" "$#"; FLAGGED_BUCKET="$2"; shift 2 ;;
         -c) require_value "$1" "$#"; CACHE_BUCKET="$2"; shift 2 ;;
@@ -538,6 +541,7 @@ fi
 
 # --- Mode: ci ---
 if [[ "$MODE" == "ci" ]]; then
+    prefix="${LABEL:+"[$LABEL] "}"
     unhandled=0
     for f in "${FILES[@]}"; do
         status=$(jq -r '.status // ""' "$f")
@@ -545,16 +549,16 @@ if [[ "$MODE" == "ci" ]]; then
             unhandled=$(( unhandled + 1 ))
             key=$(jq -r '.key // ""' "$f")
             reason=$(jq -r '.reason // ""' "$f")
-            echo "UNHANDLED: reason=$reason key=$key"
+            echo "${prefix}UNHANDLED: reason=$reason key=$key"
         fi
     done
     if [[ "$unhandled" -gt 0 ]]; then
         echo
-        echo "$unhandled unhandled flagged insight(s) awaiting team review."
-        echo "Run: scripts/review_flagged_insights.sh --review"
+        echo "${prefix}${unhandled} unhandled flagged insight(s) awaiting team review."
+        echo "${prefix}Run: scripts/review_flagged_insights.sh --review -p $PROJECT_ID -b $FLAGGED_BUCKET -c $CACHE_BUCKET"
         exit 1
     fi
-    echo "No unhandled flagged insights. All clear."
+    echo "${prefix}No unhandled flagged insights. All clear."
     exit 0
 fi
 
