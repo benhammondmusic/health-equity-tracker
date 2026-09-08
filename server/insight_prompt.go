@@ -547,7 +547,7 @@ func buildPrompt(hashID, topic, location, demographicLabel, dataSection, activeD
 		// insight focuses on place-level disparity. When the user has highlighted a
 		// specific group, that group's geographic pattern is the lens.
 		focus := ""
-		if activeDemographicGroup != "" && activeDemographicGroup != insightGroupAll {
+		if activeDemographicGroup != "" && !groupIsAll(activeDemographicGroup) {
 			focus = fmt.Sprintf(" The map currently highlights the %s group — use that group's rates to describe the geographic pattern, with \"All\" as the baseline.", activeDemographicGroup)
 		}
 		return fmt.Sprintf("This is a choropleth map showing %s in %s by %s. Each data row is labeled with its place and %s group; an \"All\" row gives the overall rate for that place.%s%s\n\nWrite a single sentence at an 8th grade reading level that captures the geographic disparity — which places have the highest and lowest rates — and what that concentration means for the people who live there. Focus on the \"so what\", not the chart mechanics.",
@@ -664,9 +664,11 @@ func buildCardInsightPrompt(hashID, topic, location, demographicLabel, dataSecti
 
 // decodeGroupParam reverses the browser's getGroupParamFromDemographicGroup
 // encoding so the server can read the selected demographic group from URL params
-// without a frontend change. The encoding is four deterministic substitutions;
-// race-code shorthand (e.g. "Black (NH)") is left as-is because the model's
-// plain-language rules already map it to the correct data-row label.
+// without a frontend change. The encoding is four deterministic substitutions
+// applied to ASCII-safe characters ('.', '_', '~', and alphanumerics only), so
+// the output never contains '%XX' percent-encoded bytes and url.QueryUnescape
+// is not needed. Race-code shorthand (e.g. "Black (NH)") is left as-is because
+// the model's plain-language rules already map it to the correct data-row label.
 func decodeGroupParam(param string) string {
 	if param == "" {
 		return ""
@@ -737,6 +739,8 @@ func buildContrastPrompt(hashID, topic1, topic2, location1, location2, demograph
 			}
 		}
 	default:
+		// Different topics AND different places. The browser does not emit this
+		// combination today, so isMap and hasActiveGroup guidance are not needed.
 		setup = fmt.Sprintf("Two side-by-side charts compare %s in %s with %s in %s, across %s groups.", topic1, location1, topic2, location2, demographic)
 		viewALabel = fmt.Sprintf("View A (%s in %s)", topic1, location1)
 		viewBLabel = fmt.Sprintf("View B (%s in %s)", topic2, location2)
