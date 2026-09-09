@@ -75,6 +75,12 @@ export default function ShareTrendsChartCard(props: ShareTrendsChartCardProps) {
   const setSelectedTableGroups = useCallback(
     (groups: DemographicGroup[]) => {
       const value = getGroupsParamFromDemographicGroups(groups)
+      // See the matching guard in RateTrendsChartCard — the mount-time replay
+      // must not push a history entry.
+      const current =
+        new URLSearchParams(window.location.search).get(SHARE_GROUPS_PARAM) ??
+        ''
+      if (current === value) return
       setLocationAtom((prev) => {
         const next = new URLSearchParams(prev.searchParams)
         if (value) next.set(SHARE_GROUPS_PARAM, value)

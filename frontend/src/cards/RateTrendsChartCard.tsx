@@ -79,6 +79,12 @@ export default function RateTrendsChartCard(props: RateTrendsChartCardProps) {
   const setSelectedTableGroups = useCallback(
     (groups: DemographicGroup[]) => {
       const value = getGroupsParamFromDemographicGroups(groups)
+      // The trends chart replays its current selection through this setter on
+      // mount, so writing unconditionally would push a history entry per card
+      // and leave one back-press stranded on an identical intermediate state.
+      const current =
+        new URLSearchParams(window.location.search).get(RATE_GROUPS_PARAM) ?? ''
+      if (current === value) return
       setLocationAtom((prev) => {
         const next = new URLSearchParams(prev.searchParams)
         if (value) next.set(RATE_GROUPS_PARAM, value)
