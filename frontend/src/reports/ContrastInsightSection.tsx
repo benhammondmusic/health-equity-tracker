@@ -24,6 +24,7 @@ import {
 } from '../utils/sharedSettingsState'
 import {
   getDemographicGroupFromGroupParam,
+  getGroupParamFromDemographicGroup,
   MAP1_GROUP_PARAM,
   MAP2_GROUP_PARAM,
 } from '../utils/urlutils'
@@ -71,13 +72,24 @@ export default function ContrastInsightSection({
   // highlight the same non-All group we send it as the contrast's active group;
   // when they differ we send nothing and let the model reason across both.
   // Mirrors the browser-side derivation MapCard performs for a single card.
+  // Validate decoded groups via round-trip encoding to reject malformed URL params.
   const group1Param = useAtomValue(urlParamAtom(MAP1_GROUP_PARAM))
   const group2Param = useAtomValue(urlParamAtom(MAP2_GROUP_PARAM))
   const group1 = group1Param
-    ? getDemographicGroupFromGroupParam(group1Param)
+    ? (() => {
+        const decoded = getDemographicGroupFromGroupParam(group1Param)
+        return getGroupParamFromDemographicGroup(decoded) === group1Param
+          ? decoded
+          : undefined
+      })()
     : undefined
   const group2 = group2Param
-    ? getDemographicGroupFromGroupParam(group2Param)
+    ? (() => {
+        const decoded = getDemographicGroupFromGroupParam(group2Param)
+        return getGroupParamFromDemographicGroup(decoded) === group2Param
+          ? decoded
+          : undefined
+      })()
     : undefined
   const activeDemographicGroup =
     group1 && group1 === group2 && group1 !== ALL ? group1 : undefined
