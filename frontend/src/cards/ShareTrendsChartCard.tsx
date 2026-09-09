@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useAtomValue, useSetAtom } from 'jotai'
+import { useCallback, useState } from 'react'
 import { Link } from 'react-router'
 import { hasNonZeroUnknowns } from '../charts/trendsChart/helpers'
 import { TrendsChart } from '../charts/trendsChart/Index'
@@ -30,6 +31,13 @@ import { reportProviderSteps } from '../reports/ReportProviderSteps'
 import HetNotice from '../styles/HetComponents/HetNotice'
 import type { ScrollableHashId } from '../utils/hooks/useStepObserver'
 import { METHODOLOGY_PAGE_LINK } from '../utils/internalRoutes'
+import { locationAtom, urlParamAtom } from '../utils/sharedSettingsState'
+import {
+  getDemographicGroupsFromGroupsParam,
+  getGroupsParamFromDemographicGroups,
+  SHARE_GROUPS_1_PARAM,
+  SHARE_GROUPS_2_PARAM,
+} from '../utils/urlutils'
 import CardWrapper from './CardWrapper'
 import ChartTitle, { getChartTitleId } from './ChartTitle'
 import AltTableView from './ui/AltTableView'
@@ -53,10 +61,29 @@ interface ShareTrendsChartCardProps {
 // Intentionally removed key wrapper found in other cards as 2N prefers card not re-render
 // and instead D3 will handle updates to the data
 export default function ShareTrendsChartCard(props: ShareTrendsChartCardProps) {
-  // Manages which group filters user has applied
-  const [selectedTableGroups, setSelectedTableGroups] = useState<
-    DemographicGroup[]
-  >([])
+  // See the matching comment in RateTrendsChartCard — URL-backed so a shared
+  // link reproduces the filter, order preserved so the min/max preset detection
+  // in FilterLegend.tsx keeps working.
+  const SHARE_GROUPS_PARAM = props.isCompareCard
+    ? SHARE_GROUPS_2_PARAM
+    : SHARE_GROUPS_1_PARAM
+  const shareGroupsParam = useAtomValue(urlParamAtom(SHARE_GROUPS_PARAM))
+  const selectedTableGroups = getDemographicGroupsFromGroupsParam(
+    shareGroupsParam ?? '',
+  )
+  const setLocationAtom = useSetAtom(locationAtom)
+  const setSelectedTableGroups = useCallback(
+    (groups: DemographicGroup[]) => {
+      const value = getGroupsParamFromDemographicGroups(groups)
+      setLocationAtom((prev) => {
+        const next = new URLSearchParams(prev.searchParams)
+        if (value) next.set(SHARE_GROUPS_PARAM, value)
+        else next.delete(SHARE_GROUPS_PARAM)
+        return { ...prev, searchParams: next }
+      })
+    },
+    [SHARE_GROUPS_PARAM, setLocationAtom],
+  )
 
   const [a11yTableExpanded, setA11yTableExpanded] = useState(false)
   const [unknownsExpanded, setUnknownsExpanded] = useState(false)
