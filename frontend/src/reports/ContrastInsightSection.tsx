@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import FlagInsightButton from '../cards/ui/FlagInsightButton'
 import type { DataTypeConfig } from '../data/config/MetricConfigTypes'
 import type { DemographicType } from '../data/query/Breakdowns'
+import { ALL } from '../data/utils/Constants'
 import type { Fips } from '../data/utils/Fips'
 import { flag } from '../featureFlags'
 import HetHighlightedText from '../styles/HetComponents/HetHighlightedText'
@@ -19,7 +20,13 @@ import {
   cardQueryResponsesAtom,
   contrastInsightOpenAtom,
   contrastInsightsAtom,
+  urlParamAtom,
 } from '../utils/sharedSettingsState'
+import {
+  getDemographicGroupFromGroupParam,
+  MAP1_GROUP_PARAM,
+  MAP2_GROUP_PARAM,
+} from '../utils/urlutils'
 import { reportProviderSteps } from './ReportProviderSteps'
 
 interface ContrastInsightSectionProps {
@@ -60,7 +67,18 @@ export default function ContrastInsightSection({
   const queryResponses2 = cardQueryResponses[card2Key]
   const bothDataLoaded = Boolean(queryResponses1 && queryResponses2)
 
-  const contrastCacheKey = `${hashId}-${dataTypeConfig1.dataTypeId}-${fips1.code}-${dataTypeConfig2.dataTypeId}-${fips2.code}-${demographicType}`
+  // The highlighted group on each side of the compare. When both sides
+  // highlight the same non-All group we send it as the contrast's active group;
+  // when they differ we send nothing and let the model reason across both.
+  // Mirrors the browser-side derivation MapCard performs for a single card.
+  const group1Param = useAtomValue(urlParamAtom(MAP1_GROUP_PARAM))
+  const group2Param = useAtomValue(urlParamAtom(MAP2_GROUP_PARAM))
+  const group1 = getDemographicGroupFromGroupParam(group1Param || ALL)
+  const group2 = getDemographicGroupFromGroupParam(group2Param || ALL)
+  const activeDemographicGroup =
+    group1 === group2 && group1 !== ALL ? group1 : undefined
+
+  const contrastCacheKey = `${hashId}-${dataTypeConfig1.dataTypeId}-${fips1.code}-${dataTypeConfig2.dataTypeId}-${fips2.code}-${demographicType}-${activeDemographicGroup ?? ''}`
   const contrastInsight = contrastInsights[contrastCacheKey]
 
   const stepInfo = reportProviderSteps[hashId]
@@ -84,6 +102,7 @@ export default function ContrastInsightSection({
         demographicType,
         queryResponses1,
         queryResponses2,
+        activeDemographicGroup,
       )
       setServerCacheKey(result.cacheKey ?? null)
       if (result.rateLimited) {
@@ -102,6 +121,7 @@ export default function ContrastInsightSection({
       setIsGenerating(false)
     }
   }, [
+    activeDemographicGroup,
     contrastCacheKey,
     dataTypeConfig1,
     dataTypeConfig2,
@@ -228,6 +248,7 @@ export default function ContrastInsightSection({
                         demographicType,
                         queryResponses1,
                         queryResponses2,
+                        activeDemographicGroup,
                       )
                   : undefined
               }
