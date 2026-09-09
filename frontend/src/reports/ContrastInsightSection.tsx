@@ -2,7 +2,7 @@ import AutoAwesome from '@mui/icons-material/AutoAwesome'
 import DeleteForever from '@mui/icons-material/DeleteForever'
 import { Button, CircularProgress, IconButton, Tooltip } from '@mui/material'
 import { useAtom, useAtomValue } from 'jotai'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import FlagInsightButton from '../cards/ui/FlagInsightButton'
 import type { DataTypeConfig } from '../data/config/MetricConfigTypes'
 import type { DemographicType } from '../data/query/Breakdowns'
@@ -24,7 +24,6 @@ import {
 } from '../utils/sharedSettingsState'
 import {
   getDemographicGroupFromGroupParam,
-  getGroupParamFromDemographicGroup,
   MAP1_GROUP_PARAM,
   MAP2_GROUP_PARAM,
 } from '../utils/urlutils'
@@ -71,28 +70,32 @@ export default function ContrastInsightSection({
   // The highlighted group on each side of the compare. When both sides
   // highlight the same non-All group we send it as the contrast's active group;
   // when they differ we send nothing and let the model reason across both.
-  // Mirrors the browser-side derivation MapCard performs for a single card.
-  // Validate decoded groups via round-trip encoding to reject malformed URL params.
   const group1Param = useAtomValue(urlParamAtom(MAP1_GROUP_PARAM))
   const group2Param = useAtomValue(urlParamAtom(MAP2_GROUP_PARAM))
   const group1 = group1Param
-    ? (() => {
-        const decoded = getDemographicGroupFromGroupParam(group1Param)
-        return getGroupParamFromDemographicGroup(decoded) === group1Param
-          ? decoded
-          : undefined
-      })()
+    ? getDemographicGroupFromGroupParam(group1Param)
     : undefined
   const group2 = group2Param
-    ? (() => {
-        const decoded = getDemographicGroupFromGroupParam(group2Param)
-        return getGroupParamFromDemographicGroup(decoded) === group2Param
-          ? decoded
-          : undefined
-      })()
+    ? getDemographicGroupFromGroupParam(group2Param)
     : undefined
-  const activeDemographicGroup =
+  const highlightedGroup =
     group1 && group1 === group2 && group1 !== ALL ? group1 : undefined
+
+  // The decoder passes an unrecognized code straight through, so the param
+  // alone cannot vouch for the value that ends up in the prompt. The loaded
+  // rows are the allowlist: a group the response never returned is dropped.
+  const activeDemographicGroup = useMemo(() => {
+    if (!highlightedGroup) return undefined
+    const appearsInData = [
+      ...(queryResponses1 ?? []),
+      ...(queryResponses2 ?? []),
+    ].some((response) =>
+      response
+        .getValidRowsForField(demographicType)
+        .some((row) => row[demographicType] === highlightedGroup),
+    )
+    return appearsInData ? highlightedGroup : undefined
+  }, [highlightedGroup, queryResponses1, queryResponses2, demographicType])
 
   const contrastCacheKey = `${hashId}-${dataTypeConfig1.dataTypeId}-${fips1.code}-${dataTypeConfig2.dataTypeId}-${fips2.code}-${demographicType}-${activeDemographicGroup ?? ''}`
   const contrastInsight = contrastInsights[contrastCacheKey]
