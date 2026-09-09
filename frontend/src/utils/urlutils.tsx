@@ -39,6 +39,8 @@ export const SHARE_GROUPS_2_PARAM = 'shareGroups2'
 // Separator for multi-group params. `,` becomes `%2C` through URLSearchParams,
 // `-` collides with age buckets like `18-44`, `~` becomes `%7E`, and `.`/`_`
 // are already consumed by getGroupParamFromDemographicGroup. `*` stays literal.
+// Assumes no demographic label contains a literal `*`; one would split into two
+// bogus groups on decode.
 const GROUP_LIST_SEPARATOR = '*'
 
 // 'true' or 'false' will override the cookie to show or hide the onboarding flow

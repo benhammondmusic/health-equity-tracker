@@ -73,10 +73,14 @@ export default function ContrastInsightSection({
   // Mirrors the browser-side derivation MapCard performs for a single card.
   const group1Param = useAtomValue(urlParamAtom(MAP1_GROUP_PARAM))
   const group2Param = useAtomValue(urlParamAtom(MAP2_GROUP_PARAM))
-  const group1 = getDemographicGroupFromGroupParam(group1Param || ALL)
-  const group2 = getDemographicGroupFromGroupParam(group2Param || ALL)
+  const group1 = group1Param
+    ? getDemographicGroupFromGroupParam(group1Param)
+    : undefined
+  const group2 = group2Param
+    ? getDemographicGroupFromGroupParam(group2Param)
+    : undefined
   const activeDemographicGroup =
-    group1 === group2 && group1 !== ALL ? group1 : undefined
+    group1 && group1 === group2 && group1 !== ALL ? group1 : undefined
 
   const contrastCacheKey = `${hashId}-${dataTypeConfig1.dataTypeId}-${fips1.code}-${dataTypeConfig2.dataTypeId}-${fips2.code}-${demographicType}-${activeDemographicGroup ?? ''}`
   const contrastInsight = contrastInsights[contrastCacheKey]
