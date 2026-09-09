@@ -1,5 +1,4 @@
-import { useAtomValue, useSetAtom } from 'jotai'
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { hasNonZeroUnknowns } from '../charts/trendsChart/helpers'
 import { TrendsChart } from '../charts/trendsChart/Index'
 import type { AxisConfig } from '../charts/trendsChart/types'
@@ -29,14 +28,9 @@ import type { HetRow } from '../data/utils/DatasetTypes'
 import { splitIntoKnownsAndUnknowns } from '../data/utils/datasetutils'
 import type { Fips } from '../data/utils/Fips'
 import { reportProviderSteps } from '../reports/ReportProviderSteps'
+import { useGroupsParam } from '../utils/hooks/useGroupsParam'
 import type { ScrollableHashId } from '../utils/hooks/useStepObserver'
-import { locationAtom, urlParamAtom } from '../utils/sharedSettingsState'
-import {
-  getDemographicGroupsFromGroupsParam,
-  getGroupsParamFromDemographicGroups,
-  RATE_GROUPS_1_PARAM,
-  RATE_GROUPS_2_PARAM,
-} from '../utils/urlutils'
+import { RATE_GROUPS_1_PARAM, RATE_GROUPS_2_PARAM } from '../utils/urlutils'
 import CardWrapper from './CardWrapper'
 import ChartTitle, { getChartTitleId } from './ChartTitle'
 import UnknownPctRateGradient from './UnknownPctRateGradient'
@@ -62,37 +56,13 @@ interface RateTrendsChartCardProps {
 // Intentionally removed key wrapper found in other cards as 2N prefers card not re-render
 // and instead D3 will handle updates to the data
 export default function RateTrendsChartCard(props: RateTrendsChartCardProps) {
-  // Which groups the user has narrowed the legend to. Backed by the URL so a
-  // shared link reproduces the filter. Empty means "show every group", matching
-  // the normalization in charts/trendsChart/Index.tsx. Order is preserved on
-  // purpose — FilterLegend.tsx detects the min/max preset with an order-sensitive
-  // JSON.stringify against getMinMaxGroups(data), so sorting here would silently
-  // break the "highest / lowest averages" pill.
-  const RATE_GROUPS_PARAM = props.isCompareCard
-    ? RATE_GROUPS_2_PARAM
-    : RATE_GROUPS_1_PARAM
-  const rateGroupsParam = useAtomValue(urlParamAtom(RATE_GROUPS_PARAM))
-  const selectedTableGroups = getDemographicGroupsFromGroupsParam(
-    rateGroupsParam ?? '',
-  )
-  const setLocationAtom = useSetAtom(locationAtom)
-  const setSelectedTableGroups = useCallback(
-    (groups: DemographicGroup[]) => {
-      const value = getGroupsParamFromDemographicGroups(groups)
-      // The trends chart replays its current selection through this setter on
-      // mount, so writing unconditionally would push a history entry per card
-      // and leave one back-press stranded on an identical intermediate state.
-      const current =
-        new URLSearchParams(window.location.search).get(RATE_GROUPS_PARAM) ?? ''
-      if (current === value) return
-      setLocationAtom((prev) => {
-        const next = new URLSearchParams(prev.searchParams)
-        if (value) next.set(RATE_GROUPS_PARAM, value)
-        else next.delete(RATE_GROUPS_PARAM)
-        return { ...prev, searchParams: next }
-      })
-    },
-    [RATE_GROUPS_PARAM, setLocationAtom],
+  // URL-backed so a shared link reproduces the filter. Empty means "show every
+  // group", matching the normalization in charts/trendsChart/Index.tsx. Order is
+  // preserved on purpose — FilterLegend.tsx detects the min/max preset with an
+  // order-sensitive JSON.stringify against getMinMaxGroups(data), so sorting
+  // here would silently break the "highest / lowest averages" pill.
+  const [selectedTableGroups, setSelectedTableGroups] = useGroupsParam(
+    props.isCompareCard ? RATE_GROUPS_2_PARAM : RATE_GROUPS_1_PARAM,
   )
 
   const [a11yTableExpanded, setA11yTableExpanded] = useState(false)
