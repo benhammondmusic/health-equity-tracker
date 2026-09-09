@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -664,21 +665,25 @@ func buildCardInsightPrompt(hashID, topic, location, demographicLabel, dataSecti
 
 // decodeGroupParam reverses the browser's getGroupParamFromDemographicGroup
 // encoding so the server can read the selected demographic group from URL params
-// without a frontend change. The encoding is four deterministic substitutions
-// applied to ASCII-safe characters ('.', '_', '~', and alphanumerics only), so
-// the output never contains '%XX' percent-encoded bytes and url.QueryUnescape
-// is not needed. Race-code shorthand (e.g. "Black (NH)") is left as-is because
-// the model's plain-language rules already map it to the correct data-row label.
+// without a frontend change. URLSearchParams.toString() percent-encodes the
+// tilde character (~) as %7E, so url.QueryUnescape must be applied first to
+// restore it before the four custom substitutions run. Race-code shorthand
+// (e.g. "Black (NH)") is left as-is because the model's plain-language rules
+// already map it to the correct data-row label.
 func decodeGroupParam(param string) string {
 	if param == "" {
 		return ""
+	}
+	unescaped, err := url.QueryUnescape(param)
+	if err != nil {
+		unescaped = param
 	}
 	return strings.NewReplacer(
 		".NH", " (NH)",
 		"_", " ",
 		"~", "/",
 		"PLUS", "+",
-	).Replace(param)
+	).Replace(unescaped)
 }
 
 // parseGroupParams returns the decoded group1 and group2 values from a
