@@ -22,6 +22,8 @@ gh pr view <number> --json number,title,body,headRefName,baseRefName
 
 If no open PR is found: print an error and stop.
 
+**Before doing anything else, output one sentence describing what this PR does** — the plainest possible language, no jargon. Read the title and body to derive it. Example: "This PR adds the (NH) footnote to maternal mortality cards by setting contains_nh on the race dataset entries." Say it as your first line of output so the user immediately knows you're working on the right thing.
+
 **Check out the PR's branch before doing anything else.** When a PR number is passed, the working tree is often still on `main` (or another branch). Every later step — Biome, tsc, the behind-main merge check, review fixes — must run against the PR's own branch, so switch to it now:
 
 ```bash
