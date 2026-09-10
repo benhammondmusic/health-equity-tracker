@@ -94,7 +94,32 @@ Store `PREV_TAG`, `DIFF_BASE`, and `NEW_TAG` for use in later steps. Do not ask 
 
 ---
 
-## Step 3 — Quick Playwright smoke check against dev
+## Step 3 — Metric coverage check against prod
+
+Run the pre-release coverage check to surface any frontend metric IDs that are missing from the prod export bucket. **This is a warning, not a blocker.** A missing metric is expected when a new topic ships ahead of its first DAG run; it is only a regression when the metric existed in prod before this release.
+
+```bash
+GCS_BUCKET=<prod-bucket-name> python3 scripts/check_metric_coverage.py --warn-only
+```
+
+To get the prod bucket name, read it from the live Cloud Run service:
+
+```bash
+curl -s -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "https://run.googleapis.com/v2/projects/het-infra-prod-f6/locations/us-central1/services/frontend-service" \
+  | python3 -c "import json,sys; d=json.load(sys.stdin); [print(e['name'],'=',e.get('value','<secret>')) for c in d.get('template',{}).get('containers',[]) for e in c.get('env',[]) if 'BUCKET' in e['name'].upper()]"
+```
+
+If missing metrics are reported:
+- Note which DAG(s) are listed — those need to be rerun against the production project after the release deploys.
+- If the missing metric is a **rename of an existing metric** (regression), pause and decide: either rerun the DAG before cutting the tag, or proceed and rerun it immediately after the deploy.
+- If the missing metric is **new** (new topic, first-ever run), proceed — the data will arrive when the DAG runs for the first time.
+
+Carry any listed DAGs into Step 4's summary so the user sees them before consenting to publish.
+
+---
+
+## Step 3b — Quick Playwright smoke check against dev
 
 Run a lightweight smoke check against `dev.healthequitytracker.org` to confirm the site is up and serving real content before cutting the release.
 
@@ -166,9 +191,13 @@ Other (chore/docs/refactor/etc.)
 $N commits since $DIFF_BASE
 Dev smoke: passed
 CI: all green
+[if Step 3 reported missing metrics]
+DAGs to rerun after deploy: dagAhr (excessive_drinking_pct_rate), ...
 ```
 
 Omit any group that has no commits. Keep subjects to one line each -- truncate at 80 chars if needed.
+
+If Step 3 found missing metrics, list the DAGs and affected metrics in the summary. The user needs to see them before consenting so they can choose to rerun the DAG first or proceed and rerun after deploy.
 
 Then ask:
 > "Publish $NEW_TAG to production? (yes/no)"
