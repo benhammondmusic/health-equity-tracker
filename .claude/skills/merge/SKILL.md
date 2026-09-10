@@ -14,7 +14,7 @@ The user may pass a PR number as an argument (e.g. `/merge 4764`). If none is gi
 ## Step 1 — Identify the PR and derive fork remote
 
 ```bash
-gh pr view [<number>] --json number,title,headRefName,baseRefName,state
+gh pr view [<number>] --json number,title,body,headRefName,baseRefName,state
 ```
 
 Confirm:
@@ -22,6 +22,8 @@ Confirm:
 - `baseRefName` is `main`
 
 If the PR is already merged or closed: print a message and stop.
+
+**Output one sentence describing what this PR does** — plainest possible language, no jargon. Read the title and body to derive it. Say it as your first line of output so the user immediately knows you're merging the right thing.
 
 Derive the personal fork remote:
 
