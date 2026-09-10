@@ -95,6 +95,11 @@ export const SEVERE_MATERNAL_MORBIDITY_METRICS: DataTypeConfig[] = [
       ],
     },
     dataTableTitle: 'Summary for severe maternal morbidity',
+    // No ageSubPopulationLabel on purpose. AHR bounds this measure by the
+    // delivery hospitalization, not by age, and its own age buckets are open at
+    // both ends (<20 through 35+), so any "Ages X-Y" here would be invented.
+    // The sibling maternal_mortality label is real: that source models ages 10-54.
+    otherSubPopulationLabel: 'Birthing People',
     metrics: {
       per100k: {
         timeSeriesCadence: 'yearly',
