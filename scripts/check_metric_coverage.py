@@ -123,7 +123,9 @@ def list_national_files(bucket: str) -> list[str]:
     return [
         line.strip()
         for line in result.stdout.splitlines()
-        if "_national_current.json" in line or "_alls_national.json" in line
+        if "_national_current.json" in line
+        or "_alls_national.json" in line
+        or ("chr_data-" in line and "_county_current.json" in line)
     ]
 
 
@@ -196,10 +198,18 @@ def main() -> None:
 
     print(f"  Found {len(national_files)} national export files")
     prod_columns: set[str] = set()
+    read_failures = 0
     for gcs_path in national_files:
         cols = get_columns(gcs_path)
+        if not cols:
+            read_failures += 1
         prod_columns |= cols
 
+    if read_failures:
+        print(
+            f"  WARNING: {read_failures} file(s) could not be read — missing metrics may be under-reported.",
+            file=sys.stderr,
+        )
     print(f"  {len(prod_columns)} unique columns across all national files")
 
     # Step 3: find missing metrics
