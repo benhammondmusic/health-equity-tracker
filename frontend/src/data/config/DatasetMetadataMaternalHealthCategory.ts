@@ -18,21 +18,25 @@ export const DatasetMetadataMapMaternalHealthCategory: Record<
     name: 'Maternal Mortality, by race, nationally',
     original_data_sourced: '2019',
     source_id: 'maternal_health',
+    contains_nh: true,
   },
   'maternal_mortality_data-race_and_ethnicity_national_historical': {
     name: 'Maternal Mortality, by race, nationally',
     original_data_sourced: '1999 - 2019',
     source_id: 'maternal_health',
+    contains_nh: true,
   },
   'maternal_mortality_data-race_and_ethnicity_state_current': {
     name: 'Maternal Mortality, by race and state',
     original_data_sourced: '2019',
     source_id: 'maternal_health',
+    contains_nh: true,
   },
   'maternal_mortality_data-race_and_ethnicity_state_historical': {
     name: 'Maternal Mortality, by race and state',
     original_data_sourced: '1999 - 2019',
     source_id: 'maternal_health',
+    contains_nh: true,
   },
   'maternal_mortality_data-alls_national_current': {
     name: 'Maternal Mortality, nationally',
