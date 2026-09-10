@@ -2,17 +2,13 @@
 // the disclosure line is present, and the highlighted phrase is in the text.
 // Runs on every PR push via E2E_CI (Chromium only).
 //
-// The feature flag is armed as a URL param so CI's vite-preview build (which
-// never sets VITE_SHOW_INSIGHT_GENERATION in its env) still exercises the full
-// insight path for this one tab.
-//
 // The test targets incarceration by race, a stable view on the dev backend. If
 // the insight is not yet in cache, generation runs once and caches it. If quota
 // is exhausted that run, the test fails loudly — which is the correct signal.
 import { expect, test } from './utils/fixtures'
 
 const INSIGHT_URL =
-  '/exploredata?mls=1.incarceration-3.00&group1=All&mlp=disparity&dt1=prison&VITE_SHOW_INSIGHT_GENERATION=1'
+  '/exploredata?mls=1.incarceration-3.00&group1=All&mlp=disparity&dt1=prison'
 
 test('card insight renders text, disclosure, and highlight', async ({
   page,

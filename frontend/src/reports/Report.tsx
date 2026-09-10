@@ -21,7 +21,6 @@ import {
 } from '../data/query/Breakdowns'
 import { AGE, RACE } from '../data/utils/Constants'
 import type { Fips } from '../data/utils/Fips'
-import { flag } from '../featureFlags'
 import InsightReportCard from '../pages/ExploreData/InsightReportCard'
 import InsightReportModal from '../pages/ExploreData/InsightReportModal'
 import ReportSidebarDesktop from '../pages/ui/ReportSidebarDesktop'
@@ -72,9 +71,7 @@ export function Report(props: ReportProps) {
   )
 
   const [insightIsOpen] = useParamState(REPORT_INSIGHT_PARAM_KEY)
-  const insightMode = Boolean(
-    flag('VITE_SHOW_INSIGHT_GENERATION') && insightIsOpen,
-  )
+  const insightMode = Boolean(insightIsOpen)
 
   const dataTypeConfig = useAtomValue(selectedDataTypeConfig1Atom)
   const setSelectedFips = useSetAtom(selectedFipsAtom)
@@ -139,10 +136,7 @@ export function Report(props: ReportProps) {
   const inequityOverTimeConfig =
     resolvedConfig && metricConfigFromDtConfig('inequity', resolvedConfig)
 
-  const showInsightsButton =
-    resolvedConfig &&
-    flag('VITE_SHOW_INSIGHT_GENERATION') &&
-    props.trackerMode === 'disparity'
+  const showInsightsButton = resolvedConfig && props.trackerMode === 'disparity'
 
   return (
     <>

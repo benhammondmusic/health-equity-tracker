@@ -18,18 +18,18 @@ describe('armFeatureFlagOverridesFromUrl', () => {
   })
 
   test('turns a flag on', () => {
-    visit('/exploredata?VITE_SHOW_INSIGHT_GENERATION=1')
+    visit('/exploredata?VITE_SHOW_CORRELATION_CARD=1')
     expect(armFeatureFlagOverridesFromUrl()).toEqual({
-      VITE_SHOW_INSIGHT_GENERATION: true,
+      VITE_SHOW_CORRELATION_CARD: true,
     })
   })
 
   // The override has to be able to beat an env-on flag, otherwise there is no
   // way to preview the prod experience on dev.
   test('forces a flag off with 0', () => {
-    visit('/exploredata?VITE_SHOW_INSIGHT_GENERATION=0')
+    visit('/exploredata?VITE_SHOW_CORRELATION_CARD=0')
     expect(armFeatureFlagOverridesFromUrl()).toEqual({
-      VITE_SHOW_INSIGHT_GENERATION: false,
+      VITE_SHOW_CORRELATION_CARD: false,
     })
   })
 
@@ -58,10 +58,10 @@ describe('armFeatureFlagOverridesFromUrl', () => {
 
   test('arms several flags at once', () => {
     visit(
-      '/exploredata?VITE_SHOW_INSIGHT_GENERATION=1&VITE_SHOW_CORRELATION_CARD=1',
+      '/exploredata?VITE_SHOW_NOT_A_REAL_FLAG=1&VITE_SHOW_CORRELATION_CARD=1',
     )
     expect(armFeatureFlagOverridesFromUrl()).toEqual({
-      VITE_SHOW_INSIGHT_GENERATION: true,
+      VITE_SHOW_NOT_A_REAL_FLAG: true,
       VITE_SHOW_CORRELATION_CARD: true,
     })
   })
@@ -74,15 +74,13 @@ describe('armFeatureFlagOverridesFromUrl', () => {
   })
 
   test('strips the flag param but keeps the rest of the report state', () => {
-    visit(
-      '/exploredata?mls=1.hiv-3.00&VITE_SHOW_INSIGHT_GENERATION=1&demo=race',
-    )
+    visit('/exploredata?mls=1.hiv-3.00&VITE_SHOW_CORRELATION_CARD=1&demo=race')
     armFeatureFlagOverridesFromUrl()
     expect(window.location.search).toBe('?mls=1.hiv-3.00&demo=race')
   })
 
   test('leaves no trailing "?" when it was the only param', () => {
-    visit('/exploredata?VITE_SHOW_INSIGHT_GENERATION=1')
+    visit('/exploredata?VITE_SHOW_CORRELATION_CARD=1')
     armFeatureFlagOverridesFromUrl()
     expect(window.location.search).toBe('')
     expect(window.location.pathname).toBe('/exploredata')
@@ -92,16 +90,16 @@ describe('armFeatureFlagOverridesFromUrl', () => {
   // fixed allowlist, so the param is gone from the URL after the first mode
   // change. The override has to survive that.
   test('stays armed once the param is gone from the URL', () => {
-    visit('/exploredata?VITE_SHOW_INSIGHT_GENERATION=1')
+    visit('/exploredata?VITE_SHOW_CORRELATION_CARD=1')
     armFeatureFlagOverridesFromUrl()
     visit('/exploredata?mls=1.hiv-3.00')
     expect(armFeatureFlagOverridesFromUrl()).toEqual({
-      VITE_SHOW_INSIGHT_GENERATION: true,
+      VITE_SHOW_CORRELATION_CARD: true,
     })
   })
 
   test('does not leak across sessions', () => {
-    visit('/exploredata?VITE_SHOW_INSIGHT_GENERATION=1')
+    visit('/exploredata?VITE_SHOW_CORRELATION_CARD=1')
     armFeatureFlagOverridesFromUrl()
     sessionStorage.clear()
     visit('/exploredata')

@@ -1,7 +1,6 @@
 // Nightly-only: covers the three insight surfaces (card, contrast, report)
-// and the flag control. All tests arm the feature flag via URL param so they
-// work on any environment — including prod, where VITE_SHOW_INSIGHT_GENERATION
-// is never set in the env file. The flag control test is skipped on prod
+// and the flag control. Insights are unconditional since the gate came out, so
+// these run on every environment as-is. The flag control test is skipped on prod
 // because flagging deletes the cached key and writes to the flagged bucket.
 import { expect, test } from './utils/fixtures'
 
@@ -9,13 +8,13 @@ const IS_PROD =
   process.env.E2E_BASE_URL?.includes('healthequitytracker.org') ?? false
 
 const DISPARITY_URL =
-  '/exploredata?mls=1.incarceration-3.00&group1=All&mlp=disparity&dt1=prison&VITE_SHOW_INSIGHT_GENERATION=1'
+  '/exploredata?mls=1.incarceration-3.00&group1=All&mlp=disparity&dt1=prison'
 
 const COMPARE_URL =
-  '/exploredata?mls=1.incarceration-3.poverty-5.00&group1=All&mlp=comparevars&dt1=prison&VITE_SHOW_INSIGHT_GENERATION=1'
+  '/exploredata?mls=1.incarceration-3.poverty-5.00&group1=All&mlp=comparevars&dt1=prison'
 
 const REPORT_URL =
-  '/exploredata?mls=1.incarceration-3.00&group1=All&mlp=disparity&dt1=prison&report-insight=true&VITE_SHOW_INSIGHT_GENERATION=1'
+  '/exploredata?mls=1.incarceration-3.00&group1=All&mlp=disparity&dt1=prison&report-insight=true'
 
 // --- Card insight ---
 
@@ -33,7 +32,7 @@ test('card insight — text, disclosure, and highlight on incarceration report',
 
   const text = await card.locator('[data-testid="insight-text"]').textContent()
   expect(text?.trim().length).toBeGreaterThan(0)
-  await expect(card).toContainText('AI-generated. Verify with chart data.')
+  await expect(card).toContainText('AI-generated. Click to report a harmful or inaccurate insight, or learn more.')
   await expect(card.locator('[data-testid="insight-highlight"]')).toBeVisible()
 })
 
@@ -57,7 +56,7 @@ test('contrast insight — compare mode renders text and highlight', async ({
 
   const text = await contrastCard.locator('[data-testid="insight-text"]').textContent()
   expect(text?.trim().length).toBeGreaterThan(0)
-  await expect(contrastCard).toContainText('AI-generated. Verify with chart data.')
+  await expect(contrastCard).toContainText('AI-generated. Click to report a harmful or inaccurate insight, or learn more.')
   await expect(
     contrastCard.locator('[data-testid="insight-highlight"]'),
   ).toBeVisible()
@@ -97,13 +96,13 @@ test('report insight — all four sections render non-empty text', async ({
 
   // The report disclosure line must appear.
   await expect(
-    page.getByText('AI-generated. Verify with chart data.'),
+    page.getByText('AI-generated. Click to report a harmful or inaccurate insight, or learn more.'),
   ).toBeVisible()
 })
 
 // --- Flag control ---
 
-test('flag control — popover opens, reason enables submit, popover closes on submission', async ({
+test('flag control — dialog opens, reason enables submit, dialog closes on submission', async ({
   page,
 }) => {
   test.skip(
@@ -120,8 +119,11 @@ test('flag control — popover opens, reason enables submit, popover closes on s
   const card = page.locator('div[role="status"]').first()
   await expect(card).toBeVisible({ timeout: 30_000 })
 
-  // Open the flag popover.
-  await card.getByText('Report harmful or inaccurate content').click()
+  // The disclosure line is itself the trigger since #5220 folded reporting into
+  // the transparency dialog.
+  await card
+    .getByRole('button', { name: /AI-generated\. Click to report/ })
+    .click()
 
   // Submit is disabled until a reason is chosen.
   const submit = page.getByRole('button', { name: 'Submit report' })
@@ -132,6 +134,6 @@ test('flag control — popover opens, reason enables submit, popover closes on s
 
   await submit.click()
 
-  // The popover closes after a successful submission.
+  // The dialog closes after a successful submission.
   await expect(submit).toBeHidden({ timeout: 10_000 })
 })

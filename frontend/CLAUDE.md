@@ -204,7 +204,7 @@ VITE_SHOW_MY_FEATURE=1            # in .env.localhost / .env.dev / .env.deploy_p
 
 Read it with `flag('VITE_SHOW_MY_FEATURE')`. The identical string appears in the `.env` file, the URL param, and the call site. It is verbose, which is appropriate: a flag reference should look temporary at the point of use. The tradeoff of having no registry is no typo safety — a misspelled key reads `false` forever rather than failing to compile.
 
-One rule covers env values and params alike: present, non-empty, and not `0` means on. A param **overrides** the env for that browser tab only, so `?VITE_SHOW_INSIGHT_GENERATION=0` is how you see the prod experience on dev.
+One rule covers env values and params alike: present, non-empty, and not `0` means on. A param **overrides** the env for that browser tab only, so `?VITE_SHOW_CORRELATION_CARD=0` is how you see the prod experience on dev.
 
 ### Prod is param-only, always
 

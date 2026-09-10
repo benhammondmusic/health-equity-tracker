@@ -8,7 +8,6 @@ import type { DataTypeConfig } from '../data/config/MetricConfigTypes'
 import type { DemographicType } from '../data/query/Breakdowns'
 import { ALL } from '../data/utils/Constants'
 import type { Fips } from '../data/utils/Fips'
-import { flag } from '../featureFlags'
 import HetHighlightedText from '../styles/HetComponents/HetHighlightedText'
 import {
   generateContrastInsight,
@@ -203,8 +202,7 @@ export default function ContrastInsightSection({
 
   // When generation is unavailable the section renders nothing at all, rather
   // than an empty container or an error the reader can do nothing about.
-  if (!flag('VITE_SHOW_INSIGHT_GENERATION') || !isOpen || unavailable)
-    return null
+  if (!isOpen || unavailable) return null
 
   return (
     <div

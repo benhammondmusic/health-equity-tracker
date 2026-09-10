@@ -52,7 +52,6 @@ import {
   getExtremeValues,
 } from '../data/utils/datasetutils'
 import { Fips } from '../data/utils/Fips'
-import { flag } from '../featureFlags'
 import HetDivider from '../styles/HetComponents/HetDivider'
 import HetLinkButton from '../styles/HetComponents/HetLinkButton'
 import HetNotice from '../styles/HetComponents/HetNotice'
@@ -276,38 +275,37 @@ function MapCardWithKey(props: MapCardProps) {
   // peers (other counties in the state, or other states), which share its data
   // source and methodology. The peer file is NOT added to `queries`; the insight
   // card fetches it lazily only when opened on such a view, so multi-region maps
-  // never pay for it. Gated to the flag and non-national geographies (national
-  // has no same-level peers).
+  // never pay for it. Gated to non-national geographies, since national has no
+  // same-level peers.
   const parentFips = props.fips.getParentFips()
-  const insightPeerConfig: InsightPeerConfig | undefined =
-    flag('VITE_SHOW_INSIGHT_GENERATION') && !props.fips.isUsa()
-      ? {
-          peerQuery: metricQuery(
-            initialMetridIds,
-            Breakdowns.forChildrenFips(parentFips),
+  const insightPeerConfig: InsightPeerConfig | undefined = !props.fips.isUsa()
+    ? {
+        peerQuery: metricQuery(
+          initialMetridIds,
+          Breakdowns.forChildrenFips(parentFips),
+        ),
+        peerNoun: props.fips.isCounty()
+          ? `${parentFips.getDisplayName()} ${parentFips.getPluralChildFipsTypeDisplayName()}`
+          : 'states',
+        // responses[1] is the region-self query; peerResponses[0] is the peer
+        // query. Index here (MapCard owns the query order); the pure helpers
+        // do the row shaping and carry the unit tests.
+        getRegionAllRate: (responses) =>
+          getRegionAllRate(
+            responses[1],
+            metricConfig,
+            demographicType,
+            props.fips.getDisplayName(),
           ),
-          peerNoun: props.fips.isCounty()
-            ? `${parentFips.getDisplayName()} ${parentFips.getPluralChildFipsTypeDisplayName()}`
-            : 'states',
-          // responses[1] is the region-self query; peerResponses[0] is the peer
-          // query. Index here (MapCard owns the query order); the pure helpers
-          // do the row shaping and carry the unit tests.
-          getRegionAllRate: (responses) =>
-            getRegionAllRate(
-              responses[1],
-              metricConfig,
-              demographicType,
-              props.fips.getDisplayName(),
-            ),
-          getPeerValues: (peerResponses) =>
-            getPeerValues(
-              peerResponses[0],
-              metricConfig,
-              demographicType,
-              props.fips.code,
-            ),
-        }
-      : undefined
+        getPeerValues: (peerResponses) =>
+          getPeerValues(
+            peerResponses[0],
+            metricConfig,
+            demographicType,
+            props.fips.code,
+          ),
+      }
+    : undefined
 
   let selectedRaceSuffix = ''
   if (
