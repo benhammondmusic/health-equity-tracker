@@ -1,5 +1,7 @@
 # pylint: disable=unused-argument
 import os
+from itertools import chain, repeat
+import pytest
 import pandas as pd
 from unittest import mock
 from pandas._testing import assert_frame_equal
@@ -363,3 +365,34 @@ def testWriteToBqAgeCounty2024(mock_bq: mock.MagicMock, mock_cache: mock.MagicMo
     expected_time_series_append_df = pd.read_csv(GOLDEN_DATA_AGE_COUNTY_TIME_SERIES_APPEND, dtype=DTYPE)
     assert_frame_equal(time_series_append_df, expected_time_series_append_df, check_like=True)
     assert mock_bq.call_args_list[7][1]["overwrite"] is False
+
+
+@mock.patch("ingestion.census.fetch_acs_metadata", return_value=get_acs_metadata_as_json(2024))
+@mock.patch("datasources.acs_population.url_file_to_gcs.url_file_to_gcs", autospec=True, return_value=None)
+def testUploadToGcsRaisesOnShortfall(mock_upload: mock.MagicMock, _mock_meta: mock.MagicMock):
+    """A failed GCS write (None return) must raise rather than silently succeed."""
+    ingester = ACSPopulationIngester(False, "2024")
+    with pytest.raises(RuntimeError, match="ACS_POPULATION pre-cache wrote"):
+        ingester.upload_to_gcs("some-bucket")
+    assert mock_upload.call_count > 0
+
+
+@mock.patch("ingestion.census.fetch_acs_metadata", return_value=get_acs_metadata_as_json(2024))
+@mock.patch("datasources.acs_population.url_file_to_gcs.url_file_to_gcs", autospec=True, return_value=False)
+def testUploadToGcsSucceedsWhenAllFilesWritten(mock_upload: mock.MagicMock, _mock_meta: mock.MagicMock):
+    """All writes succeeding must not raise."""
+    ingester = ACSPopulationIngester(False, "2024")
+    result = ingester.upload_to_gcs("some-bucket")
+    assert result is False
+    assert mock_upload.call_count > 0
+
+
+@mock.patch("ingestion.census.fetch_acs_metadata", return_value=get_acs_metadata_as_json(2024))
+@mock.patch("datasources.acs_population.url_file_to_gcs.url_file_to_gcs", autospec=True)
+def testUploadToGcsRaisesOnPartialShortfall(mock_upload: mock.MagicMock, _mock_meta: mock.MagicMock):
+    """One None out of many calls must still raise — partial failure must not be silenced."""
+    mock_upload.side_effect = chain([None], repeat(False))
+    ingester = ACSPopulationIngester(False, "2024")
+    with pytest.raises(RuntimeError, match=r"pre-cache wrote \d+/\d+"):
+        ingester.upload_to_gcs("some-bucket")
+    assert mock_upload.call_count > 1

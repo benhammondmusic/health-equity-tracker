@@ -1,4 +1,6 @@
 import os
+from itertools import chain, repeat
+import pytest
 import pandas as pd
 from unittest import mock
 from pandas._testing import assert_frame_equal
@@ -407,3 +409,31 @@ def testRaceCountyBaseTable2024(mock_acs: mock.MagicMock):
         expected_df.sort_values(cols).reset_index(drop=True),
         check_like=True,
     )
+
+
+@mock.patch("datasources.acs_condition.url_file_to_gcs.url_file_to_gcs", autospec=True, return_value=None)
+def testUploadToGcsRaisesOnShortfall(mock_upload: mock.MagicMock):
+    """A failed GCS write (None return) must raise rather than silently succeed."""
+    condition = AcsCondition()
+    with pytest.raises(RuntimeError, match="ACS_CONDITION pre-cache wrote"):
+        condition.upload_to_gcs("some-bucket", year="2024")
+    assert mock_upload.call_count > 0
+
+
+@mock.patch("datasources.acs_condition.url_file_to_gcs.url_file_to_gcs", autospec=True, return_value=False)
+def testUploadToGcsSucceedsWhenAllFilesWritten(mock_upload: mock.MagicMock):
+    """All writes succeeding (even with no diff) must not raise."""
+    condition = AcsCondition()
+    result = condition.upload_to_gcs("some-bucket", year="2024")
+    assert result is False
+    assert mock_upload.call_count > 0
+
+
+@mock.patch("datasources.acs_condition.url_file_to_gcs.url_file_to_gcs", autospec=True)
+def testUploadToGcsRaisesOnPartialShortfall(mock_upload: mock.MagicMock):
+    """One None out of many calls must still raise — partial failure must not be silenced."""
+    mock_upload.side_effect = chain([None], repeat(False))
+    condition = AcsCondition()
+    with pytest.raises(RuntimeError, match=r"pre-cache wrote \d+/\d+"):
+        condition.upload_to_gcs("some-bucket", year="2024")
+    assert mock_upload.call_count > 1
