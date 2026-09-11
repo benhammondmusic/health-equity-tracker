@@ -41,7 +41,8 @@ func cachedDownload(ctx context.Context, bucket, name string) ([]byte, int64, er
 		}
 		currentGen, err := gcsGeneration(ctx, bucket, name)
 		if err != nil {
-			// Serve stale rather than error on a transient metadata failure.
+			// Serve stale on transient metadata failure; touch so we don't hammer GCS every request.
+			datasetCache.touch(name)
 			return data, gen, nil
 		}
 		if currentGen == gen {
@@ -51,12 +52,13 @@ func cachedDownload(ctx context.Context, bucket, name string) ([]byte, int64, er
 		// Object was rewritten by a DAG run; fetch the new version.
 		dlCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
-		newData, _, fetchErr := gcsDownload(dlCtx, bucket, name)
+		newData, actualGen, fetchErr := gcsDownload(dlCtx, bucket, name)
 		if fetchErr != nil {
-			return nil, 0, fetchErr
+			// Serve stale rather than 500 — cache still holds a consistent data/generation pair.
+			return data, gen, nil
 		}
-		datasetCache.set(name, newData, currentGen)
-		return newData, currentGen, nil
+		datasetCache.set(name, newData, actualGen)
+		return newData, actualGen, nil
 	}
 	dlCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
