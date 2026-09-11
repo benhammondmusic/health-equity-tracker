@@ -410,17 +410,19 @@ def testRaceCountyBaseTable2024(mock_acs: mock.MagicMock):
     )
 
 
-@mock.patch("datasources.acs_condition.url_file_to_gcs.url_file_to_gcs", return_value=None)
-def testUploadToGcsRaisesOnShortfall(_mock_upload: mock.MagicMock):
+@mock.patch("datasources.acs_condition.url_file_to_gcs.url_file_to_gcs", autospec=True, return_value=None)
+def testUploadToGcsRaisesOnShortfall(mock_upload: mock.MagicMock):
     """A failed GCS write (None return) must raise rather than silently succeed."""
     condition = AcsCondition()
     with pytest.raises(RuntimeError, match="ACS_CONDITION pre-cache wrote"):
         condition.upload_to_gcs("some-bucket", year="2024")
+    assert mock_upload.call_count > 0
 
 
-@mock.patch("datasources.acs_condition.url_file_to_gcs.url_file_to_gcs", return_value=False)
-def testUploadToGcsSucceedsWhenAllFilesWritten(_mock_upload: mock.MagicMock):
+@mock.patch("datasources.acs_condition.url_file_to_gcs.url_file_to_gcs", autospec=True, return_value=False)
+def testUploadToGcsSucceedsWhenAllFilesWritten(mock_upload: mock.MagicMock):
     """All writes succeeding (even with no diff) must not raise."""
     condition = AcsCondition()
     result = condition.upload_to_gcs("some-bucket", year="2024")
     assert result is False
+    assert mock_upload.call_count > 0
