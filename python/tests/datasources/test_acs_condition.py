@@ -1,4 +1,5 @@
 import os
+from itertools import chain, repeat
 import pytest
 import pandas as pd
 from unittest import mock
@@ -426,3 +427,13 @@ def testUploadToGcsSucceedsWhenAllFilesWritten(mock_upload: mock.MagicMock):
     result = condition.upload_to_gcs("some-bucket", year="2024")
     assert result is False
     assert mock_upload.call_count > 0
+
+
+@mock.patch("datasources.acs_condition.url_file_to_gcs.url_file_to_gcs", autospec=True)
+def testUploadToGcsRaisesOnPartialShortfall(mock_upload: mock.MagicMock):
+    """One None out of many calls must still raise — partial failure must not be silenced."""
+    mock_upload.side_effect = chain([None], repeat(False))
+    condition = AcsCondition()
+    with pytest.raises(RuntimeError, match=r"pre-cache wrote \d+/\d+"):
+        condition.upload_to_gcs("some-bucket", year="2024")
+    assert mock_upload.call_count > 1

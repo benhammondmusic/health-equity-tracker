@@ -1,5 +1,6 @@
 # pylint: disable=unused-argument
 import os
+from itertools import chain, repeat
 import pytest
 import pandas as pd
 from unittest import mock
@@ -384,3 +385,14 @@ def testUploadToGcsSucceedsWhenAllFilesWritten(mock_upload: mock.MagicMock, _moc
     result = ingester.upload_to_gcs("some-bucket")
     assert result is False
     assert mock_upload.call_count > 0
+
+
+@mock.patch("ingestion.census.fetch_acs_metadata", return_value=get_acs_metadata_as_json(2024))
+@mock.patch("datasources.acs_population.url_file_to_gcs.url_file_to_gcs", autospec=True)
+def testUploadToGcsRaisesOnPartialShortfall(mock_upload: mock.MagicMock, _mock_meta: mock.MagicMock):
+    """One None out of many calls must still raise — partial failure must not be silenced."""
+    mock_upload.side_effect = chain([None], repeat(False))
+    ingester = ACSPopulationIngester(False, "2024")
+    with pytest.raises(RuntimeError, match=r"pre-cache wrote \d+/\d+"):
+        ingester.upload_to_gcs("some-bucket")
+    assert mock_upload.call_count > 1
