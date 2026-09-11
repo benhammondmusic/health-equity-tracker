@@ -32,6 +32,30 @@ func downloadBlob(ctx context.Context, bucket, name string) ([]byte, error) {
 	return io.ReadAll(r)
 }
 
+// downloadBlobWithGeneration fetches an object and returns its GCS generation number
+// alongside the bytes, so callers get data and generation in a single round trip.
+func downloadBlobWithGeneration(ctx context.Context, bucket, name string) ([]byte, int64, error) {
+	r, err := getGCSClient().Bucket(bucket).Object(name).NewReader(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer r.Close()
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return nil, 0, err
+	}
+	return data, r.Attrs.Generation, nil
+}
+
+// getGCSGeneration issues a metadata-only request to read the current generation number.
+func getGCSGeneration(ctx context.Context, bucket, name string) (int64, error) {
+	attrs, err := getGCSClient().Bucket(bucket).Object(name).Attrs(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return attrs.Generation, nil
+}
+
 func uploadBlob(ctx context.Context, bucket, name string, data []byte, contentType string) error {
 	w := getGCSClient().Bucket(bucket).Object(name).NewWriter(ctx)
 	w.ContentType = contentType
