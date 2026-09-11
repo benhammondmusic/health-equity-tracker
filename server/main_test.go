@@ -26,20 +26,28 @@ var testNDJSON = []byte(
 var testCSV = []byte("label1,label2,label3\nvalueA,valueB,valueC\nvalueD,valueE,valueF\n")
 
 type mockGCS struct {
-	data map[string][]byte
-	err  error
-	hits int
+	data       map[string][]byte
+	err        error
+	hits       int
+	generation int64
 }
 
-func (m *mockGCS) download(_, name string) ([]byte, error) {
+func (m *mockGCS) download(_, name string) ([]byte, int64, error) {
 	m.hits++
 	if m.err != nil {
-		return nil, m.err
+		return nil, 0, m.err
 	}
 	if d, ok := m.data[name]; ok {
-		return d, nil
+		return d, m.generation, nil
 	}
-	return nil, &mockNotFoundError{name: name}
+	return nil, 0, &mockNotFoundError{name: name}
+}
+
+func (m *mockGCS) getGeneration(_, name string) (int64, error) {
+	if _, ok := m.data[name]; !ok {
+		return 0, &mockNotFoundError{name: name}
+	}
+	return m.generation, nil
 }
 
 type mockNotFoundError struct{ name string }
@@ -54,8 +62,11 @@ func newTestRouter(t *testing.T, mock *mockGCS) http.Handler {
 	t.Setenv("GCS_BUCKET", "test-bucket")
 	t.Setenv("METADATA_FILENAME", "test_data.ndjson")
 	datasetCache = newByteCache(maxCacheBytes, cacheTTL)
-	gcsDownload = func(_ context.Context, bucket, name string) ([]byte, error) {
+	gcsDownload = func(_ context.Context, bucket, name string) ([]byte, int64, error) {
 		return mock.download(bucket, name)
+	}
+	gcsGeneration = func(_ context.Context, bucket, name string) (int64, error) {
+		return mock.getGeneration(bucket, name)
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /metadata", metadataHandler)
@@ -193,7 +204,7 @@ func TestNdjsonToArray(t *testing.T) {
 
 func TestByteCacheTTLExpiry(t *testing.T) {
 	c := newByteCache(1024, 10*time.Millisecond)
-	c.set("key", []byte("value"))
+	c.set("key", []byte("value"), 1)
 	if _, ok := c.get("key"); !ok {
 		t.Fatal("expected cache hit before TTL")
 	}
@@ -205,13 +216,71 @@ func TestByteCacheTTLExpiry(t *testing.T) {
 
 func TestByteCacheEviction(t *testing.T) {
 	c := newByteCache(5, time.Hour)
-	c.set("a", []byte("12345"))
-	c.set("b", []byte("67890")) // should evict "a"
+	c.set("a", []byte("12345"), 1)
+	c.set("b", []byte("67890"), 1) // should evict "a"
 	if _, ok := c.get("a"); ok {
 		t.Error("expected 'a' to be evicted")
 	}
 	if _, ok := c.get("b"); !ok {
 		t.Error("expected 'b' to be present")
+	}
+}
+
+func TestCachedDownloadRefetchesOnGenerationChange(t *testing.T) {
+	updated := []byte(`{"col":"new"}` + "\n")
+	mock := &mockGCS{
+		data:       map[string][]byte{"test_dataset": testNDJSON},
+		generation: 1,
+	}
+	h := newTestRouter(t, mock)
+
+	// Prime the cache.
+	rr := get(h, "/dataset?name=test_dataset")
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rr.Code)
+	}
+	if mock.hits != 1 {
+		t.Fatalf("expected 1 GCS download, got %d", mock.hits)
+	}
+
+	// Force the generation check path by setting checkInterval to 0.
+	old := checkInterval
+	checkInterval = 0
+	defer func() { checkInterval = old }()
+
+	// Simulate a DAG rerun: new data and a new generation in GCS.
+	mock.data["test_dataset"] = updated
+	mock.generation = 2
+
+	rr = get(h, "/dataset?name=test_dataset")
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200 after generation change, got %d", rr.Code)
+	}
+	if mock.hits != 2 {
+		t.Errorf("expected 2 GCS downloads after generation change, got %d", mock.hits)
+	}
+	if !strings.Contains(rr.Body.String(), "new") {
+		t.Error("expected response to contain updated data")
+	}
+}
+
+func TestCachedDownloadSkipsGCSWhenGenerationUnchanged(t *testing.T) {
+	mock := &mockGCS{
+		data:       map[string][]byte{"test_dataset": testNDJSON},
+		generation: 1,
+	}
+	h := newTestRouter(t, mock)
+
+	get(h, "/dataset?name=test_dataset")
+
+	old := checkInterval
+	checkInterval = 0
+	defer func() { checkInterval = old }()
+
+	// Same generation, same data — should not re-download.
+	get(h, "/dataset?name=test_dataset")
+	if mock.hits != 1 {
+		t.Errorf("expected 1 GCS download (generation unchanged), got %d", mock.hits)
 	}
 }
 

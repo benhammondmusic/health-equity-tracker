@@ -49,7 +49,9 @@ go test ./...
 The server handles all traffic on a single port:
 
 - **Data requests** (`/dataset`, `/metadata`): served from GCS via a 150 MB byte-aware LRU
-  cache with a 2-hour TTL. NDJSON files are converted to JSON arrays on the fly.
+  cache with a 2-hour TTL. On each cache hit, GCS metadata is checked every 30 seconds to detect
+  DAG rewrites (via generation number change); `/dataset` responses carry `Cache-Control: no-cache`
+  and `ETag: <generation>` to let browsers revalidate cheaply. NDJSON files are converted to JSON arrays on the fly.
 - **AI insights** (`/insight`): the caller posts what the view is showing (kind, hash ID,
   topic, location, metric configs, rendered rows, URL pathname and params). The server renders
   the prompt from those templates, derives the cache key from the rendered text, then checks a
