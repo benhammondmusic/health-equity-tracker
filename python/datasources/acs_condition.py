@@ -327,34 +327,48 @@ class AcsCondition(DataSource):
 
         file_diff = False
         census_api_key = os.getenv("CENSUS_API_KEY")
+        intended_files = []
+        failed_files = []
 
         for measure, acs_item in acs_items.items():
             for prefix, race in acs_item.prefix_map.items():
                 for county_level in [True, False]:
                     params = get_all_params_for_group(prefix, county_level)
-                    file_diff = (
-                        url_file_to_gcs.url_file_to_gcs(
-                            self.base_url,
-                            params,
-                            bucket,
-                            self.get_filename_race(measure, race, county_level, year),
-                            census_api_key=census_api_key,
-                        )
-                        or file_diff
-                    )
-
-            for county_level in [True, False]:
-                params = get_all_params_for_group(acs_item.sex_age_prefix, county_level)
-                file_diff = (
-                    url_file_to_gcs.url_file_to_gcs(
+                    filename = self.get_filename_race(measure, race, county_level, year)
+                    intended_files.append(filename)
+                    result = url_file_to_gcs.url_file_to_gcs(
                         self.base_url,
                         params,
                         bucket,
-                        self.get_filename_sex(measure, county_level, year),
+                        filename,
                         census_api_key=census_api_key,
                     )
-                    or file_diff
+                    if result is None:
+                        failed_files.append(filename)
+                    else:
+                        file_diff = result or file_diff
+
+            for county_level in [True, False]:
+                params = get_all_params_for_group(acs_item.sex_age_prefix, county_level)
+                filename = self.get_filename_sex(measure, county_level, year)
+                intended_files.append(filename)
+                result = url_file_to_gcs.url_file_to_gcs(
+                    self.base_url,
+                    params,
+                    bucket,
+                    filename,
+                    census_api_key=census_api_key,
                 )
+                if result is None:
+                    failed_files.append(filename)
+                else:
+                    file_diff = result or file_diff
+
+        if failed_files:
+            raise RuntimeError(
+                f"ACS_CONDITION pre-cache wrote {len(intended_files) - len(failed_files)}/{len(intended_files)} "
+                f"files for year {year}. Missing: {failed_files}"
+            )
 
         return file_diff
 

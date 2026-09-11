@@ -1,4 +1,5 @@
 import os
+import pytest
 import pandas as pd
 from unittest import mock
 from pandas._testing import assert_frame_equal
@@ -407,3 +408,19 @@ def testRaceCountyBaseTable2024(mock_acs: mock.MagicMock):
         expected_df.sort_values(cols).reset_index(drop=True),
         check_like=True,
     )
+
+
+@mock.patch("datasources.acs_condition.url_file_to_gcs.url_file_to_gcs", return_value=None)
+def testUploadToGcsRaisesOnShortfall(_mock_upload: mock.MagicMock):
+    """A failed GCS write (None return) must raise rather than silently succeed."""
+    condition = AcsCondition()
+    with pytest.raises(RuntimeError, match="ACS_CONDITION pre-cache wrote"):
+        condition.upload_to_gcs("some-bucket", year="2024")
+
+
+@mock.patch("datasources.acs_condition.url_file_to_gcs.url_file_to_gcs", return_value=False)
+def testUploadToGcsSucceedsWhenAllFilesWritten(_mock_upload: mock.MagicMock):
+    """All writes succeeding (even with no diff) must not raise."""
+    condition = AcsCondition()
+    result = condition.upload_to_gcs("some-bucket", year="2024")
+    assert result is False
