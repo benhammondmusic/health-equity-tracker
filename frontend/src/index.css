@@ -278,3 +278,36 @@ button[data-action="back"]:focus {
 		opacity: 1;
 	}
 }
+
+/* Windows forced-colors (High Contrast) mode */
+@media (forced-colors: active) {
+	/* Named aliases so the intent is obvious at each use site */
+	:root {
+		--a11y-contrast-border: ButtonText;
+		--a11y-contrast-selected: Highlight;
+		--a11y-contrast-disabled: GrayText;
+	}
+
+	/* Buttons without explicit borders become invisible when backgrounds are stripped */
+	button:not([disabled]):not([aria-disabled="true"]),
+	[role="button"]:not([disabled]):not([aria-disabled="true"]),
+	[role="menuitem"]:not([disabled]) {
+		border: 1px solid var(--a11y-contrast-border) !important;
+	}
+
+	/* Selected and pressed states: outline replaces stripped background-color cues */
+	[aria-selected="true"],
+	[aria-pressed="true"],
+	.Mui-selected {
+		outline: 3px solid var(--a11y-contrast-selected) !important;
+		outline-offset: -3px;
+	}
+
+	/* Disabled elements use system GrayText */
+	button[disabled],
+	[aria-disabled="true"],
+	.Mui-disabled {
+		color: var(--a11y-contrast-disabled) !important;
+		border-color: var(--a11y-contrast-disabled) !important;
+	}
+}
