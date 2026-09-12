@@ -12,7 +12,7 @@ export default function FaqsPage() {
 
       <section
         id='main-content'
-        aria-labelledby='main-content'
+        aria-labelledby='main'
         tabIndex={-1}
         className='mx-auto flex w-svw max-w-lgplus flex-col justify-center px-8 py-16'
       >
