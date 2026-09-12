@@ -20,7 +20,7 @@ test('Default Guides tab is loaded on /whatishealthequity', async ({
 }) => {
   await page.goto('/whatishealthequity', { waitUntil: 'commit' })
 
-  const guidesTab = await page.getByRole('button', {
+  const guidesTab = await page.getByRole('tab', {
     name: 'Data Visualization Guides',
   })
   await expect(guidesTab).toHaveText('Data Visualization Guides')
