@@ -13,6 +13,7 @@ export default function HetExpandableBoxButton(
   return (
     <button
       type='button'
+      aria-expanded={props.expanded}
       onClick={() => {
         props.setExpanded(!props.expanded)
       }}
