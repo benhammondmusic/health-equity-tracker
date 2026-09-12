@@ -3,6 +3,7 @@ import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select, { type SelectChangeEvent } from '@mui/material/Select'
+import { useId } from 'react'
 
 const MIN_TOP_LABEL_WIDTH = 110
 
@@ -22,13 +23,14 @@ export default function SimpleSelect<ListItemType>(
     props.setSelected(event.target.value as ListItemType)
   }
 
+  const uid = useId()
   const value = Object.values(props.optionsMap).includes(props.selected)
     ? props.selected
     : ''
 
-  const safeLabel = props.label.replace(' ', '-')
-  const labelId = `${safeLabel}-select-label`
-  const id = `${safeLabel}-select`
+  const safeLabel = props.label.replaceAll(' ', '-')
+  const labelId = `${uid}-${safeLabel}-select-label`
+  const id = `${uid}-${safeLabel}-select`
 
   return (
     <FormControl

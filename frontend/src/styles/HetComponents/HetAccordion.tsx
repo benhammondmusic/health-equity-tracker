@@ -3,7 +3,7 @@ import Accordion from '@mui/material/Accordion'
 import AccordionDetails from '@mui/material/AccordionDetails'
 import AccordionSummary from '@mui/material/AccordionSummary'
 import type React from 'react'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 
 interface AccordionData {
   question: string
@@ -28,6 +28,7 @@ const HetAccordion: React.FC<HetAccordionProps> = ({
   headingLevelOverride,
 }) => {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null)
+  const uid = useId()
 
   const handleChange =
     (index: number) => (_event: React.SyntheticEvent, isExpanded: boolean) => {
@@ -49,8 +50,8 @@ const HetAccordion: React.FC<HetAccordionProps> = ({
     >
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
-        aria-controls={`panel-content-${index}`}
-        id={`panel-header-${index}`}
+        aria-controls={`${uid}-panel-content-${index}`}
+        id={`${uid}-panel-header-${index}`}
         className={`${
           expandedIndex === index
             ? 'rounded-t-md bg-hover-alt-green'
