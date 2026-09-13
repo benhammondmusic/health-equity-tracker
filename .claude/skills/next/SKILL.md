@@ -59,7 +59,15 @@ while True:
 }}"""
     r = subprocess.run(['gh', 'api', 'graphql', '-f', f'query={query}'],
                        capture_output=True, text=True)
-    pv2 = json.loads(r.stdout)['data']['organization']['projectV2']
+    if r.returncode != 0:
+        print(f"gh api error: {r.stderr}", file=sys.stderr); sys.exit(1)
+    resp = json.loads(r.stdout)
+    if 'errors' in resp:
+        print(f"GraphQL errors: {resp['errors']}", file=sys.stderr); sys.exit(1)
+    org = resp.get('data', {}).get('organization')
+    if not org or not org.get('projectV2'):
+        print(f"Unexpected response shape: {resp}", file=sys.stderr); sys.exit(1)
+    pv2 = org['projectV2']
     if not project_id:
         project_id = pv2['id']
     page = pv2['items']
