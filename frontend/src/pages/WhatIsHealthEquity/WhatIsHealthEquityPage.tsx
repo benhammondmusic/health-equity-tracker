@@ -19,7 +19,7 @@ export default function WhatIsHealthEquityPage() {
 
       <section
         id='main-content'
-        aria-labelledby='main-content'
+        aria-labelledby='main'
         tabIndex={-1}
         className='mx-auto flex w-svw max-w-lgplus flex-col justify-center px-8 py-16'
       >
@@ -71,7 +71,7 @@ export default function WhatIsHealthEquityPage() {
         </div>
       </section>
       <section
-        aria-labelledby='learning-section'
+        aria-label='Trending Topics'
         id='learning-section'
         className='bg-white-smoke'
       >
@@ -100,7 +100,7 @@ export default function WhatIsHealthEquityPage() {
       </section>
 
       <section
-        aria-labelledby='select-faqs'
+        aria-label='Frequently Asked Questions'
         className='mx-auto flex w-svw max-w-lgplus items-center justify-center px-8 py-16 xl:px-0'
       >
         <FaqSection />

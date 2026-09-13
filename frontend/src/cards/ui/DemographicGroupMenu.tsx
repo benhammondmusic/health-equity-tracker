@@ -144,7 +144,6 @@ function DemographicGroupMenu(props: DemographicGroupMenuProps) {
       <label
         className='flex items-center px-2 py-1.5 text-small'
         htmlFor={`groupMenu${props?.idSuffix ?? ''}`}
-        aria-hidden={true}
       >
         {demOption}:
       </label>
@@ -166,9 +165,7 @@ function DemographicGroupMenu(props: DemographicGroupMenuProps) {
       </Button>
 
       <MenuPopover
-        aria-labelledby={`#groupMenu${props?.idSuffix ?? ''}`}
         popover={firstMenu}
-        aria-expanded='true'
         items={oneLevelMenu ? Object.values(props.options)[0] : props.options}
         onClick={(event: React.MouseEvent<HTMLElement>, value) => {
           if (oneLevelMenu) {
