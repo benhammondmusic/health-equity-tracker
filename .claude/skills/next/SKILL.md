@@ -14,41 +14,70 @@ Recommend the single best issue to work on next, with a short ranked shortlist. 
 
 Issue all four commands in parallel (they are independent):
 
-**Project board — open items:**
+**Project board — ALL items (paginated):**
+
+Use a Python script to paginate through every board item. Do not cap at 100; keep fetching until `hasNextPage` is false.
 
 ```bash
-gh api graphql -f query='
-{
-  organization(login: "SatcherInstitute") {
-    projectV2(number: 5) {
+python3 - <<'PYEOF'
+import subprocess, json, sys
+
+all_nodes = []
+project_id = None
+cursor = None
+
+while True:
+    after = f', after: "{cursor}"' if cursor else ''
+    query = f"""{{
+  organization(login: "SatcherInstitute") {{
+    projectV2(number: 5) {{
       id
-      items(first: 100) {
-        nodes {
-          fieldValues(first: 10) {
-            nodes {
-              ... on ProjectV2ItemFieldSingleSelectValue {
+      items(first: 100{after}) {{
+        pageInfo {{ hasNextPage endCursor }}
+        nodes {{
+          fieldValues(first: 10) {{
+            nodes {{
+              ... on ProjectV2ItemFieldSingleSelectValue {{
                 name
-                field { ... on ProjectV2SingleSelectField { name } }
-              }
-            }
-          }
-          content {
-            ... on Issue {
-              id
-              number
-              title
-              state
-              assignees(first: 3) { nodes { login } }
-              labels(first: 8) { nodes { name } }
-              milestone { title number }
+                field {{ ... on ProjectV2SingleSelectField {{ name }} }}
+              }}
+            }}
+          }}
+          content {{
+            ... on Issue {{
+              id number title state
+              assignees(first: 3) {{ nodes {{ login }} }}
+              labels(first: 8) {{ nodes {{ name }} }}
+              milestone {{ title number }}
               url
-            }
-          }
-        }
-      }
-    }
-  }
-}'
+            }}
+          }}
+        }}
+      }}
+    }}
+  }}
+}}"""
+    r = subprocess.run(['gh', 'api', 'graphql', '-f', f'query={query}'],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        print(f"gh api error: {r.stderr}", file=sys.stderr); sys.exit(1)
+    resp = json.loads(r.stdout)
+    if 'errors' in resp:
+        print(f"GraphQL errors: {resp['errors']}", file=sys.stderr); sys.exit(1)
+    org = resp.get('data', {}).get('organization')
+    if not org or not org.get('projectV2'):
+        print(f"Unexpected response shape: {resp}", file=sys.stderr); sys.exit(1)
+    pv2 = org['projectV2']
+    if not project_id:
+        project_id = pv2['id']
+    page = pv2['items']
+    all_nodes.extend(page['nodes'])
+    if not page['pageInfo']['hasNextPage']:
+        break
+    cursor = page['pageInfo']['endCursor']
+
+print(json.dumps({'project_id': project_id, 'nodes': all_nodes}))
+PYEOF
 ```
 
 **Milestone health:**
@@ -59,8 +88,8 @@ gh api 'repos/SatcherInstitute/health-equity-tracker/milestones?state=open&per_p
 **Recently opened issues (last 60 days) — catches new issues not yet added to the board:**
 
 ```bash
-SIXTY_DAYS_AGO=$(date -u -d '60 days ago' +%Y-%m-%d 2>/dev/null || date -u -v-60d +%Y-%m-%d)
-gh issue list --repo SatcherInstitute/health-equity-tracker --state open --search "created:>$SIXTY_DAYS_AGO" --limit 100 --sort created --order desc --json number,title,assignees,labels,milestone,url,createdAt
+SIXTY_DAYS_AGO=$(date -u -v-60d +%Y-%m-%d 2>/dev/null || date -u -d '60 days ago' +%Y-%m-%d)
+gh issue list --repo SatcherInstitute/health-equity-tracker --state open --search "created:>$SIXTY_DAYS_AGO" --limit 100 --json number,title,assignees,labels,milestone,url,createdAt
 ```
 
 **Issues assigned to bhammond — catches assigned work that may have fallen off the board:**
